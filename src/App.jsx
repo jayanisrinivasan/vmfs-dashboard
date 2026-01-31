@@ -1,881 +1,577 @@
-// ============================================================================
-// VMFS Dashboard - Main Application Component
-// ============================================================================
-// This file contains the UI logic. All data is imported from vmfs-data.js
-
-import { useState } from "react";
+// VMFS Command Center - AI Safety Hackathon Edition
+import { useState, useEffect, useRef } from "react";
 import { MECHANISMS, OOVS, COVERAGE_MATRIX, KEY_FINDINGS } from "./vmfs-data";
+import "./App.css";
 
-export default function App() {
-  // ==========================================================================
-  // STATE MANAGEMENT
-  // ==========================================================================
-  const [selectedMechanism, setSelectedMechanism] = useState(MECHANISMS[0]);
-  const [selectedOov, setSelectedOov] = useState(null);
-  const [activeTab, setActiveTab] = useState("heatmap"); // heatmap | coverage | mechanisms
-  const [sortBy, setSortBy] = useState("weightedAvg"); // weightedAvg | tf | pt | gsa
-  const [filterGlobalSouth, setFilterGlobalSouth] = useState(false);
+// ============================================================================
+// ANIMATED COUNTER
+// ============================================================================
+function Counter({ value, duration = 1500, suffix = "", decimals = 0 }) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    let start = 0;
+    const end = parseFloat(value);
+    const increment = end / (duration / 16);
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= end) { setCount(end); clearInterval(timer); }
+      else setCount(start);
+    }, 16);
+    return () => clearInterval(timer);
+  }, [value, duration]);
+  return <span>{count.toFixed(decimals)}{suffix}</span>;
+}
 
-  // ==========================================================================
-  // SORTING & FILTERING LOGIC
-  // ==========================================================================
+// ============================================================================
+// RADAR CHART (SVG)
+// ============================================================================
+function RadarChart({ mechanisms, selected, onSelect }) {
+  const size = 300;
+  const center = size / 2;
+  const radius = 120;
+  const dimensions = ["technicalFeasibility", "politicalTractability", "sovereigntyImpact", "globalSouthAdoptability"];
+  const labels = ["Technical", "Political", "Sovereignty", "Global South"];
 
-  // Sort mechanisms based on selected dimension
-  const sortedMechanisms = [...MECHANISMS].sort((a, b) => {
-    if (sortBy === "weightedAvg") return b.vmfsScores.weightedAvg - a.vmfsScores.weightedAvg;
-    if (sortBy === "tf") return b.vmfsScores.technicalFeasibility - a.vmfsScores.technicalFeasibility;
-    if (sortBy === "pt") return b.vmfsScores.politicalTractability - a.vmfsScores.politicalTractability;
-    if (sortBy === "gsa") return b.vmfsScores.globalSouthAdoptability - a.vmfsScores.globalSouthAdoptability;
-    return 0;
-  });
-
-  // Filter mechanisms based on Global South adoptability
-  const filteredMechanisms = filterGlobalSouth
-    ? sortedMechanisms.filter((m) => m.vmfsScores.globalSouthAdoptability >= 3.5)
-    : sortedMechanisms;
-
-  // ==========================================================================
-  // HELPER FUNCTIONS - COLOR CODING (HIGH CONTRAST)
-  // ==========================================================================
-
-  // Get text color based on score (1-5 scale) - DARKER for readability
-  const getScoreColor = (score) => {
-    if (score >= 4.5) return "#14532D"; // very dark green
-    if (score >= 3.5) return "#1E3A8A"; // very dark blue
-    if (score >= 2.5) return "#57534E"; // dark gray
-    if (score >= 1.5) return "#9A3412"; // dark orange
-    return "#7F1D1D"; // dark red
+  const getPoint = (value, index, r = radius) => {
+    const angle = (Math.PI * 2 * index) / dimensions.length - Math.PI / 2;
+    const distance = (value / 5) * r;
+    return {
+      x: center + Math.cos(angle) * distance,
+      y: center + Math.sin(angle) * distance,
+    };
   };
 
-  // Get background color based on score - STRONGER colors
-  const getScoreBgColor = (score) => {
-    if (score >= 4.5) return "#BBF7D0"; // strong green
-    if (score >= 3.5) return "#BFDBFE"; // strong blue
-    if (score >= 2.5) return "#E7E5E4"; // medium gray
-    if (score >= 1.5) return "#FED7AA"; // strong orange
-    return "#FECACA"; // strong red
+  const getPolygonPoints = (mechanism) => {
+    return dimensions.map((dim, i) => {
+      const p = getPoint(mechanism.vmfsScores[dim], i);
+      return `${p.x},${p.y}`;
+    }).join(" ");
   };
 
-  // ==========================================================================
-  // RENDER
-  // ==========================================================================
   return (
-    <div style={{ fontFamily: "Inter, sans-serif", background: "#FAFAF9", minHeight: "100vh" }}>
+    <svg viewBox={`0 0 ${size} ${size}`} style={{ width: "100%", maxWidth: "400px" }}>
+      {/* Grid circles */}
+      {[1, 2, 3, 4, 5].map(level => (
+        <circle
+          key={level}
+          cx={center}
+          cy={center}
+          r={(level / 5) * radius}
+          fill="none"
+          stroke="rgba(255,255,255,0.06)"
+          strokeWidth="1"
+        />
+      ))}
 
-      {/* ====================================================================
-          HEADER (Sticky)
-          ==================================================================== */}
-      <header
-        style={{
-          background: "white",
-          borderBottom: "1px solid #E7E5E4",
-          padding: "24px",
-          position: "sticky",
-          top: 0,
-          zIndex: 100,
-        }}
-      >
-        <h1 style={{ margin: 0, fontSize: "32px", fontFamily: "Crimson Pro, serif", color: "#1C1917" }}>
-          VMFS
-        </h1>
-        <p style={{ margin: "4px 0 0 0", fontSize: "14px", color: "#78716C" }}>
-          Verification Mechanism Feasibility Scorer
-        </p>
-      </header>
+      {/* Axis lines */}
+      {dimensions.map((_, i) => {
+        const p = getPoint(5, i);
+        return (
+          <line
+            key={i}
+            x1={center}
+            y1={center}
+            x2={p.x}
+            y2={p.y}
+            stroke="rgba(255,255,255,0.1)"
+            strokeWidth="1"
+          />
+        );
+      })}
 
-      {/* ====================================================================
-          MAIN CONTENT CONTAINER
-          ==================================================================== */}
-      <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "24px" }}>
+      {/* Labels */}
+      {labels.map((label, i) => {
+        const p = getPoint(5.8, i);
+        return (
+          <text
+            key={i}
+            x={p.x}
+            y={p.y}
+            fill="#8888a0"
+            fontSize="10"
+            textAnchor="middle"
+            dominantBaseline="middle"
+          >
+            {label}
+          </text>
+        );
+      })}
 
-        {/* ==================================================================
-            KEY INSIGHTS PANEL
-            ================================================================== */}
-        <div
-          style={{
-            background: "#F8FAFC",
-            borderLeft: "4px solid #1E40AF",
-            padding: "24px",
-            marginBottom: "24px",
-            borderRadius: "4px",
-          }}
-        >
-          <h3 style={{ margin: "0 0 16px 0", fontSize: "18px", color: "#1C1917" }}>💡 Key Findings</h3>
-          <ul style={{ margin: 0, paddingLeft: "20px", color: "#44403C" }}>
-            {KEY_FINDINGS.map((finding) => (
-              <li key={finding.id} style={{ marginBottom: "8px" }}>
-                <strong>{finding.title}:</strong> {finding.description}
-              </li>
-            ))}
-          </ul>
+      {/* Mechanism polygons */}
+      {mechanisms.slice(0, 4).map((m, idx) => {
+        const isSelected = selected?.id === m.id;
+        const colors = ["#4b7bec", "#a855f7", "#fbbf24", "#22c55e"];
+        return (
+          <polygon
+            key={m.id}
+            points={getPolygonPoints(m)}
+            fill={isSelected ? `${colors[idx]}30` : `${colors[idx]}10`}
+            stroke={colors[idx]}
+            strokeWidth={isSelected ? 2.5 : 1.5}
+            opacity={selected && !isSelected ? 0.3 : 1}
+            style={{ cursor: "pointer", transition: "all 0.3s ease" }}
+            onClick={() => onSelect(m)}
+          />
+        );
+      })}
+    </svg>
+  );
+}
+
+// ============================================================================
+// SCATTER PLOT
+// ============================================================================
+function ScatterPlot({ mechanisms, selected, onSelect }) {
+  const width = 400;
+  const height = 300;
+  const padding = 40;
+
+  const xScale = (v) => padding + ((v - 1) / 4) * (width - padding * 2);
+  const yScale = (v) => height - padding - ((v - 1) / 4) * (height - padding * 2);
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} style={{ width: "100%" }}>
+      {/* Grid */}
+      {[1, 2, 3, 4, 5].map(v => (
+        <g key={v}>
+          <line x1={xScale(v)} y1={padding} x2={xScale(v)} y2={height - padding} stroke="rgba(255,255,255,0.06)" />
+          <line x1={padding} y1={yScale(v)} x2={width - padding} y2={yScale(v)} stroke="rgba(255,255,255,0.06)" />
+        </g>
+      ))}
+
+      {/* Quadrant labels */}
+      <text x={width - padding - 5} y={padding + 15} fill="#555566" fontSize="10" textAnchor="end">High PT, High TF</text>
+      <text x={padding + 5} y={height - padding - 10} fill="#555566" fontSize="10">Low PT, Low TF</text>
+
+      {/* Axis labels */}
+      <text x={width / 2} y={height - 8} fill="#8888a0" fontSize="11" textAnchor="middle">Technical Feasibility →</text>
+      <text x={12} y={height / 2} fill="#8888a0" fontSize="11" textAnchor="middle" transform={`rotate(-90, 12, ${height / 2})`}>Political Tractability →</text>
+
+      {/* Points */}
+      {mechanisms.map((m) => {
+        const isSelected = selected?.id === m.id;
+        const x = xScale(m.vmfsScores.technicalFeasibility);
+        const y = yScale(m.vmfsScores.politicalTractability);
+        const size = 6 + m.vmfsScores.weightedAvg * 2;
+
+        return (
+          <g key={m.id} style={{ cursor: "pointer" }} onClick={() => onSelect(m)}>
+            <circle
+              cx={x}
+              cy={y}
+              r={size}
+              fill={isSelected ? "var(--accent)" : "var(--blue)"}
+              opacity={selected && !isSelected ? 0.3 : 0.8}
+              style={{ transition: "all 0.3s ease" }}
+            />
+            {isSelected && (
+              <circle
+                cx={x}
+                cy={y}
+                r={size + 4}
+                fill="none"
+                stroke="var(--accent)"
+                strokeWidth="2"
+                opacity="0.5"
+              />
+            )}
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+// ============================================================================
+// MECHANISM CARD (Compact)
+// ============================================================================
+function MechanismCard({ m, isSelected, onClick, index }) {
+  const cov = COVERAGE_MATRIX.find(c => c.mechanismId === m.id);
+  const covCount = ["oov1_compute", "oov2_lineage", "oov3_deployment", "oov4_post_training"]
+    .filter(k => cov?.[k]?.coverage === "primary" || cov?.[k]?.coverage === "partial").length;
+
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        padding: "20px",
+        background: isSelected ? "var(--bg-elevated)" : "var(--bg-card)",
+        border: `1px solid ${isSelected ? "var(--accent)" : "var(--border)"}`,
+        borderRadius: "12px",
+        cursor: "pointer",
+        transition: "all 0.2s ease",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      {/* Rank badge */}
+      <div style={{
+        position: "absolute",
+        top: "12px",
+        right: "12px",
+        width: "24px",
+        height: "24px",
+        borderRadius: "50%",
+        background: "rgba(255,255,255,0.05)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: "11px",
+        fontWeight: 600,
+        color: "var(--text-dim)",
+      }}>
+        {index + 1}
+      </div>
+
+      <h3 style={{ fontSize: "15px", fontWeight: 600, marginBottom: "8px", paddingRight: "30px" }}>
+        {m.shortName}
+      </h3>
+
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+        <span style={{
+          fontSize: "28px",
+          fontWeight: 700,
+          fontFamily: "var(--mono)",
+          color: m.vmfsScores.weightedAvg >= 3.5 ? "var(--accent)" : m.vmfsScores.weightedAvg >= 2.5 ? "var(--amber)" : "var(--red)",
+        }}>
+          {m.vmfsScores.weightedAvg.toFixed(1)}
+        </span>
+        <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>
+          <div>Feasibility Score</div>
+          <div style={{ color: "var(--text-muted)" }}>{covCount}/4 OoVs covered</div>
+        </div>
+      </div>
+
+      {/* Mini score bars */}
+      <div style={{ display: "flex", gap: "4px" }}>
+        {[
+          { v: m.vmfsScores.technicalFeasibility, c: "#4b7bec" },
+          { v: m.vmfsScores.politicalTractability, c: "#a855f7" },
+          { v: m.vmfsScores.sovereigntyImpact, c: "#fbbf24" },
+          { v: m.vmfsScores.globalSouthAdoptability, c: "#22c55e" },
+        ].map((s, i) => (
+          <div key={i} style={{ flex: 1 }}>
+            <div style={{ height: "4px", background: "rgba(255,255,255,0.1)", borderRadius: "2px", overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${(s.v / 5) * 100}%`, background: s.c, borderRadius: "2px" }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// DETAIL PANEL
+// ============================================================================
+function DetailPanel({ mechanism, onClose }) {
+  if (!mechanism) return null;
+  const cov = COVERAGE_MATRIX.find(c => c.mechanismId === mechanism.id);
+  const oovKeys = ["oov1_compute", "oov2_lineage", "oov3_deployment", "oov4_post_training"];
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 100 }} />
+      <div style={{
+        position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
+        width: "90%", maxWidth: "700px", maxHeight: "85vh", overflowY: "auto",
+        background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "16px",
+        zIndex: 101, padding: "32px",
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px" }}>
+          <div>
+            <h2 style={{ fontSize: "24px", fontWeight: 700, marginBottom: "8px" }}>{mechanism.shortName}</h2>
+            <p style={{ fontSize: "14px", color: "var(--text-dim)", lineHeight: 1.6 }}>{mechanism.definition}</p>
+          </div>
+          <button onClick={onClose} style={{
+            background: "rgba(255,255,255,0.05)", border: "none", borderRadius: "8px",
+            padding: "8px 16px", color: "var(--text-dim)", cursor: "pointer", fontSize: "13px",
+          }}>Close</button>
         </div>
 
-        {/* ==================================================================
-            TAB NAVIGATION
-            ================================================================== */}
-        <div
-          style={{
-            display: "flex",
-            gap: "8px",
-            borderBottom: "2px solid #E7E5E4",
-            marginBottom: "24px",
-          }}
-        >
+        {/* Score grid */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "12px", marginBottom: "24px" }}>
           {[
-            { id: "heatmap", label: "Feasibility Heatmap" },
-            { id: "coverage", label: "Coverage Matrix" },
-            { id: "mechanisms", label: "Mechanisms" },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              style={{
-                padding: "12px 24px",
-                border: "none",
-                background: "transparent",
-                cursor: "pointer",
-                fontSize: "16px",
-                fontWeight: activeTab === tab.id ? "600" : "400",
-                color: activeTab === tab.id ? "#1E40AF" : "#78716C",
-                borderBottom: activeTab === tab.id ? "3px solid #1E40AF" : "3px solid transparent",
-                transition: "all 0.2s",
-              }}
-            >
-              {tab.label}
-            </button>
+            { label: "Technical", value: mechanism.vmfsScores.technicalFeasibility, color: "#4b7bec" },
+            { label: "Political", value: mechanism.vmfsScores.politicalTractability, color: "#a855f7" },
+            { label: "Sovereignty", value: mechanism.vmfsScores.sovereigntyImpact, color: "#fbbf24" },
+            { label: "Global South", value: mechanism.vmfsScores.globalSouthAdoptability, color: "#22c55e" },
+            { label: "Average", value: mechanism.vmfsScores.weightedAvg, color: "var(--accent)" },
+          ].map((s, i) => (
+            <div key={i} style={{ textAlign: "center", padding: "16px", background: "var(--bg-elevated)", borderRadius: "10px" }}>
+              <div style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "6px" }}>{s.label}</div>
+              <div style={{ fontSize: "24px", fontWeight: 700, fontFamily: "var(--mono)", color: s.color }}>{s.value.toFixed(1)}</div>
+            </div>
           ))}
         </div>
 
-        {/* ==================================================================
-            FILTER CONTROLS
-            ================================================================== */}
-        <div
-          style={{
-            background: "white",
-            border: "1px solid #E7E5E4",
-            padding: "16px",
-            marginBottom: "24px",
-            borderRadius: "4px",
-          }}
-        >
-          <div style={{ display: "flex", gap: "24px", alignItems: "center", flexWrap: "wrap" }}>
-            {/* Sort Dropdown */}
-            <div>
-              <label style={{ fontSize: "14px", color: "#78716C", marginRight: "8px" }}>Sort by:</label>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                style={{
-                  padding: "6px 12px",
-                  border: "1px solid #E7E5E4",
-                  borderRadius: "4px",
-                  fontSize: "14px",
-                }}
-              >
-                <option value="weightedAvg">Weighted Average</option>
-                <option value="tf">Technical Feasibility</option>
-                <option value="pt">Political Tractability</option>
-                <option value="gsa">Global South Adoptability</option>
-              </select>
-            </div>
-
-            {/* Global South Filter Checkbox */}
-            <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
-              <input
-                type="checkbox"
-                checked={filterGlobalSouth}
-                onChange={(e) => setFilterGlobalSouth(e.target.checked)}
-                style={{ width: "16px", height: "16px" }}
-              />
-              <span style={{ fontSize: "14px", color: "#44403C" }}>
-                High Global South Adoptability (≥3.5)
-              </span>
-            </label>
+        {/* OoV Coverage */}
+        <div style={{ marginBottom: "24px" }}>
+          <h4 style={{ fontSize: "12px", color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "12px" }}>Object of Verification Coverage</h4>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px" }}>
+            {OOVS.map((oov, i) => {
+              const cell = cov?.[oovKeys[i]];
+              const isPrimary = cell?.coverage === "primary";
+              const isPartial = cell?.coverage === "partial";
+              return (
+                <div key={oov.id} style={{
+                  padding: "12px",
+                  background: isPrimary ? "rgba(0, 212, 170, 0.1)" : isPartial ? "rgba(75, 123, 236, 0.1)" : "var(--bg-elevated)",
+                  border: `1px solid ${isPrimary ? "rgba(0, 212, 170, 0.3)" : isPartial ? "rgba(75, 123, 236, 0.3)" : "var(--border)"}`,
+                  borderRadius: "8px", textAlign: "center",
+                }}>
+                  <div style={{ fontSize: "13px", fontWeight: 500, marginBottom: "4px" }}>{oov.shortName}</div>
+                  <div style={{ fontSize: "11px", color: isPrimary ? "var(--accent)" : isPartial ? "var(--blue)" : "var(--text-muted)" }}>
+                    {isPrimary ? "● Primary" : isPartial ? "◐ Partial" : "○ None"}
+                  </div>
+                </div>
+              );
+            })}
           </div>
-
-          {/* Filter Active Indicator */}
-          {filterGlobalSouth && (
-            <p style={{ margin: "8px 0 0 0", fontSize: "12px", color: "#78716C" }}>
-              Showing {filteredMechanisms.length} of {MECHANISMS.length} mechanisms
-            </p>
-          )}
         </div>
 
-        {/* ==================================================================
-            TAB 1: HEATMAP VIEW
-            ================================================================== */}
-        {activeTab === "heatmap" && (
-          <div>
-            <div style={{ background: "white", border: "1px solid #E7E5E4", borderRadius: "4px", overflow: "hidden" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        {/* Limitations */}
+        <div style={{ padding: "16px", background: "rgba(239, 68, 68, 0.05)", border: "1px solid rgba(239, 68, 68, 0.2)", borderRadius: "10px", marginBottom: "16px" }}>
+          <h4 style={{ fontSize: "12px", color: "var(--red)", textTransform: "uppercase", marginBottom: "8px" }}>Key Limitations</h4>
+          <p style={{ fontSize: "13px", color: "var(--text-dim)", lineHeight: 1.6 }}>{mechanism.limitations.primary}</p>
+        </div>
 
-                {/* Table Header */}
-                <thead>
-                  <tr style={{ background: "#F5F5F4" }}>
-                    <th style={{
-                      padding: "16px",
-                      textAlign: "left",
-                      fontSize: "14px",
-                      fontWeight: "700",
-                      color: "#1C1917",
-                      borderBottom: "2px solid #A8A29E",
-                      minWidth: "220px"
-                    }}>
-                      Mechanism
-                    </th>
-                    <th style={{
-                      padding: "16px",
-                      textAlign: "center",
-                      fontSize: "14px",
-                      fontWeight: "700",
-                      color: "#1C1917",
-                      borderBottom: "2px solid #A8A29E"
-                    }} title="Technical Feasibility (1-5): Can we build this with current/near-term technology?">
-                      TF
-                    </th>
-                    <th style={{
-                      padding: "16px",
-                      textAlign: "center",
-                      fontSize: "14px",
-                      fontWeight: "700",
-                      color: "#1C1917",
-                      borderBottom: "2px solid #A8A29E"
-                    }} title="Political Tractability (1-5): Will states and labs agree to this?">
-                      PT
-                    </th>
-                    <th style={{
-                      padding: "16px",
-                      textAlign: "center",
-                      fontSize: "14px",
-                      fontWeight: "700",
-                      color: "#1C1917",
-                      borderBottom: "2px solid #A8A29E"
-                    }} title="Institutional Requirements: What bodies/agreements are needed? (Low/Medium/High)">
-                      IR
-                    </th>
-                    <th style={{
-                      padding: "16px",
-                      textAlign: "center",
-                      fontSize: "14px",
-                      fontWeight: "700",
-                      color: "#1C1917",
-                      borderBottom: "2px solid #A8A29E"
-                    }} title="Sovereignty Impact (1-5): How intrusive? Higher = less intrusive">
-                      SI
-                    </th>
-                    <th style={{
-                      padding: "16px",
-                      textAlign: "center",
-                      fontSize: "14px",
-                      fontWeight: "700",
-                      color: "#1C1917",
-                      borderBottom: "2px solid #A8A29E"
-                    }} title="Global South Adoptability (1-5): Can developing nations participate meaningfully?">
-                      GSA
-                    </th>
-                    <th style={{
-                      padding: "16px",
-                      textAlign: "center",
-                      fontSize: "14px",
-                      fontWeight: "700",
-                      color: "#1C1917",
-                      borderBottom: "2px solid #A8A29E"
-                    }}>
-                      Avg
-                    </th>
-                    <th style={{
-                      padding: "16px",
-                      textAlign: "center",
-                      fontSize: "14px",
-                      fontWeight: "700",
-                      color: "#1C1917",
-                      borderBottom: "2px solid #A8A29E"
-                    }}>
-                      Coverage
-                    </th>
-                  </tr>
-                </thead>
-
-                {/* Table Body */}
-                <tbody>
-                  {filteredMechanisms.map((mechanism) => {
-                    // Get coverage data for this mechanism
-                    const coverage = COVERAGE_MATRIX.find((c) => c.mechanismId === mechanism.id);
-                    const coverageSymbols = [
-                      coverage?.oov1_compute.symbol || "○",
-                      coverage?.oov2_lineage.symbol || "○",
-                      coverage?.oov3_deployment.symbol || "○",
-                      coverage?.oov4_post_training.symbol || "○",
-                    ];
-
-                    return (
-                      <tr
-                        key={mechanism.id}
-                        onClick={() => setSelectedMechanism(mechanism)}
-                        style={{
-                          cursor: "pointer",
-                          background: selectedMechanism.id === mechanism.id ? "#F5F5F4" : "white",
-                          transition: "background 0.2s",
-                        }}
-                        onMouseEnter={(e) => {
-                          if (selectedMechanism.id !== mechanism.id) {
-                            e.currentTarget.style.background = "#FAFAF9";
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (selectedMechanism.id !== mechanism.id) {
-                            e.currentTarget.style.background = "white";
-                          }
-                        }}
-                      >
-                        {/* Mechanism Name - FIXED to show actual name */}
-                        <td style={{
-                          padding: "18px 16px",
-                          borderBottom: "1px solid #E7E5E4",
-                          fontWeight: "600",
-                          fontSize: "14px",
-                          color: "#1C1917"
-                        }}>
-                          {mechanism.shortName}
-                        </td>
-
-                        {/* Technical Feasibility */}
-                        <td
-                          style={{
-                            padding: "18px 16px",
-                            textAlign: "center",
-                            borderBottom: "1px solid #E7E5E4",
-                            background: getScoreBgColor(mechanism.vmfsScores.technicalFeasibility),
-                            color: getScoreColor(mechanism.vmfsScores.technicalFeasibility),
-                            fontWeight: "700",
-                            fontSize: "15px",
-                            fontFamily: "IBM Plex Mono, monospace",
-                          }}
-                          title={`Technical Feasibility: ${mechanism.vmfsScores.technicalFeasibility}/5`}
-                        >
-                          {mechanism.vmfsScores.technicalFeasibility.toFixed(1)}
-                        </td>
-
-                        {/* Political Tractability */}
-                        <td
-                          style={{
-                            padding: "18px 16px",
-                            textAlign: "center",
-                            borderBottom: "1px solid #E7E5E4",
-                            background: getScoreBgColor(mechanism.vmfsScores.politicalTractability),
-                            color: getScoreColor(mechanism.vmfsScores.politicalTractability),
-                            fontWeight: "700",
-                            fontSize: "15px",
-                            fontFamily: "IBM Plex Mono, monospace",
-                          }}
-                          title={`Political Tractability: ${mechanism.vmfsScores.politicalTractability}/5`}
-                        >
-                          {mechanism.vmfsScores.politicalTractability.toFixed(1)}
-                        </td>
-
-                        {/* Institutional Requirements */}
-                        <td
-                          style={{
-                            padding: "18px 16px",
-                            textAlign: "center",
-                            borderBottom: "1px solid #E7E5E4",
-                            fontSize: "14px",
-                            fontWeight: "700",
-                            background: mechanism.vmfsScores.institutionalReq === "low" ? "#BBF7D0" :
-                                       mechanism.vmfsScores.institutionalReq === "medium" ? "#FED7AA" : "#FECACA",
-                            color: mechanism.vmfsScores.institutionalReq === "low" ? "#14532D" :
-                                   mechanism.vmfsScores.institutionalReq === "medium" ? "#9A3412" : "#7F1D1D",
-                          }}
-                          title={`Institutional Requirements: ${mechanism.vmfsScores.institutionalReq}`}
-                        >
-                          {mechanism.vmfsScores.institutionalReq.toUpperCase()[0]}
-                        </td>
-
-                        {/* Sovereignty Impact */}
-                        <td
-                          style={{
-                            padding: "18px 16px",
-                            textAlign: "center",
-                            borderBottom: "1px solid #E7E5E4",
-                            background: getScoreBgColor(mechanism.vmfsScores.sovereigntyImpact),
-                            color: getScoreColor(mechanism.vmfsScores.sovereigntyImpact),
-                            fontWeight: "700",
-                            fontSize: "15px",
-                            fontFamily: "IBM Plex Mono, monospace",
-                          }}
-                          title={`Sovereignty Impact: ${mechanism.vmfsScores.sovereigntyImpact}/5 (higher = less intrusive)`}
-                        >
-                          {mechanism.vmfsScores.sovereigntyImpact.toFixed(1)}
-                        </td>
-
-                        {/* Global South Adoptability */}
-                        <td
-                          style={{
-                            padding: "18px 16px",
-                            textAlign: "center",
-                            borderBottom: "1px solid #E7E5E4",
-                            background: getScoreBgColor(mechanism.vmfsScores.globalSouthAdoptability),
-                            color: getScoreColor(mechanism.vmfsScores.globalSouthAdoptability),
-                            fontWeight: "700",
-                            fontSize: "15px",
-                            fontFamily: "IBM Plex Mono, monospace",
-                          }}
-                          title={`Global South Adoptability: ${mechanism.vmfsScores.globalSouthAdoptability}/5`}
-                        >
-                          {mechanism.vmfsScores.globalSouthAdoptability.toFixed(1)}
-                        </td>
-
-                        {/* Weighted Average - USE DIRECT VALUE FROM DATA */}
-                        <td
-                          style={{
-                            padding: "18px 16px",
-                            textAlign: "center",
-                            borderBottom: "1px solid #E7E5E4",
-                            fontWeight: "700",
-                            fontSize: "17px",
-                            fontFamily: "IBM Plex Mono, monospace",
-                            background: "#F5F5F4",
-                            color: "#1C1917"
-                          }}
-                          title={`Overall Weighted Average: ${mechanism.vmfsScores.weightedAvg}/5`}
-                        >
-                          {mechanism.vmfsScores.weightedAvg.toFixed(1)}
-                        </td>
-
-                        {/* Coverage Symbols - FIXED VISIBILITY */}
-                        <td
-                          style={{
-                            padding: "18px 16px",
-                            textAlign: "center",
-                            borderBottom: "1px solid #E7E5E4",
-                            fontSize: "20px",
-                            letterSpacing: "6px",
-                            fontWeight: "600",
-                            color: "#1C1917",
-                            background: "white"
-                          }}
-                          title="OoV Coverage: Compute | Lineage | Deployment | Post-Training"
-                        >
-                          {coverageSymbols.map((symbol, idx) => {
-                            let symbolColor;
-                            if (symbol === "✔") symbolColor = "#166534"; // dark green
-                            else if (symbol === "◐") symbolColor = "#1E40AF"; // dark blue
-                            else if (symbol === "✖") symbolColor = "#A8A29E"; // gray
-                            else symbolColor = "#D6D3D1"; // light gray for ○
-
-                            return (
-                              <span key={idx} style={{ color: symbolColor, marginRight: idx < 3 ? "6px" : "0" }}>
-                                {symbol}
-                              </span>
-                            );
-                          })}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Enhanced Legend with Color Examples */}
-            <div style={{
-              marginTop: "24px",
-              background: "#F5F5F4",
-              padding: "20px",
-              borderRadius: "4px",
-              border: "1px solid #E7E5E4"
-            }}>
-              <div style={{ marginBottom: "16px" }}>
-                <strong style={{ fontSize: "14px", color: "#1C1917" }}>Column Explanations:</strong>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", fontSize: "13px", marginBottom: "16px" }}>
-                <div>
-                  <strong style={{ color: "#1C1917" }}>TF</strong> = Technical Feasibility<br/>
-                  <span style={{ color: "#78716C" }}>Can we build this now?</span>
-                </div>
-                <div>
-                  <strong style={{ color: "#1C1917" }}>PT</strong> = Political Tractability<br/>
-                  <span style={{ color: "#78716C" }}>Will states/labs agree?</span>
-                </div>
-                <div>
-                  <strong style={{ color: "#1C1917" }}>IR</strong> = Institutional Requirements<br/>
-                  <span style={{ color: "#78716C" }}>L=Low, M=Medium, H=High</span>
-                </div>
-                <div>
-                  <strong style={{ color: "#1C1917" }}>SI</strong> = Sovereignty Impact<br/>
-                  <span style={{ color: "#78716C" }}>Higher = less intrusive</span>
-                </div>
-                <div>
-                  <strong style={{ color: "#1C1917" }}>GSA</strong> = Global South Adoptability<br/>
-                  <span style={{ color: "#78716C" }}>Can developing nations join?</span>
-                </div>
-                <div>
-                  <strong style={{ color: "#1C1917" }}>Coverage</strong> = OoV Symbols<br/>
-                  <span style={{ color: "#78716C" }}>✔ Primary, ◐ Partial, ✖ None</span>
-                </div>
-              </div>
-
-              <div style={{ marginTop: "16px", paddingTop: "16px", borderTop: "1px solid #D6D3D1" }}>
-                <strong style={{ fontSize: "14px", color: "#1C1917", marginBottom: "8px", display: "block" }}>Color Scale (1-5 scores):</strong>
-                <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <div style={{ width: "40px", height: "24px", background: "#BBF7D0", border: "1px solid #86EFAC", borderRadius: "2px" }}></div>
-                    <span style={{ fontSize: "13px", color: "#44403C" }}>4.5-5.0 (Excellent)</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <div style={{ width: "40px", height: "24px", background: "#BFDBFE", border: "1px solid #93C5FD", borderRadius: "2px" }}></div>
-                    <span style={{ fontSize: "13px", color: "#44403C" }}>3.5-4.4 (Good)</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <div style={{ width: "40px", height: "24px", background: "#E7E5E4", border: "1px solid #D6D3D1", borderRadius: "2px" }}></div>
-                    <span style={{ fontSize: "13px", color: "#44403C" }}>2.5-3.4 (Moderate)</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <div style={{ width: "40px", height: "24px", background: "#FED7AA", border: "1px solid #FDBA74", borderRadius: "2px" }}></div>
-                    <span style={{ fontSize: "13px", color: "#44403C" }}>1.5-2.4 (Challenging)</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <div style={{ width: "40px", height: "24px", background: "#FECACA", border: "1px solid #FCA5A5", borderRadius: "2px" }}></div>
-                    <span style={{ fontSize: "13px", color: "#44403C" }}>1.0-1.4 (Very Difficult)</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+        {/* Evasion */}
+        <div>
+          <h4 style={{ fontSize: "12px", color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "8px" }}>Evasion Vectors</h4>
+          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+            {mechanism.evasionModes.map((e, i) => (
+              <span key={i} style={{ padding: "4px 10px", background: "var(--bg-elevated)", borderRadius: "4px", fontSize: "12px", color: "var(--text-dim)" }}>{e}</span>
+            ))}
           </div>
-        )}
+        </div>
+      </div>
+    </>
+  );
+}
 
-        {/* ==================================================================
-            TAB 2: COVERAGE MATRIX VIEW
-            ================================================================== */}
-        {activeTab === "coverage" && (
-          <div>
-            <div style={{ background: "white", border: "1px solid #E7E5E4", borderRadius: "4px", overflow: "hidden" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+// ============================================================================
+// MAIN APP
+// ============================================================================
+export default function App() {
+  const [selected, setSelected] = useState(null);
+  const [view, setView] = useState("radar"); // radar | matrix | list
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareList, setCompareList] = useState([]);
 
-                {/* Table Header */}
-                <thead>
-                  <tr style={{ background: "#F5F5F4" }}>
-                    <th style={{ padding: "12px 16px", textAlign: "left", fontSize: "14px", fontWeight: "600", color: "#1C1917", borderBottom: "2px solid #E7E5E4", minWidth: "220px" }}>
-                      Mechanism
-                    </th>
-                    {OOVS.map((oov) => (
-                      <th key={oov.id} style={{ padding: "12px 16px", textAlign: "center", fontSize: "14px", fontWeight: "600", color: "#1C1917", borderBottom: "2px solid #E7E5E4", minWidth: "140px" }}>
-                        {oov.shortName}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
+  const sorted = [...MECHANISMS].sort((a, b) => b.vmfsScores.weightedAvg - a.vmfsScores.weightedAvg);
+  const topMechanism = sorted[0];
+  const avgScore = (MECHANISMS.reduce((a, m) => a + m.vmfsScores.weightedAvg, 0) / MECHANISMS.length);
+  const coverage = COVERAGE_MATRIX.flatMap(c => ["oov1_compute", "oov2_lineage", "oov3_deployment", "oov4_post_training"].map(k => c[k]?.coverage))
+    .filter(c => c === "primary").length;
 
-                {/* Table Body */}
-                <tbody>
-                  {filteredMechanisms.map((mechanism) => {
-                    const coverage = COVERAGE_MATRIX.find((c) => c.mechanismId === mechanism.id);
-                    return (
-                      <tr key={mechanism.id} style={{ borderBottom: "1px solid #E7E5E4" }}>
-                        <td style={{
-                          padding: "20px 16px",
-                          fontWeight: "500",
-                          fontSize: "14px",
-                          color: "#1C1917",
-                          background: "#FAFAF9"
-                        }}>
-                          {mechanism.shortName}
-                        </td>
-                        {["oov1_compute", "oov2_lineage", "oov3_deployment", "oov4_post_training"].map((oovKey) => {
-                          const cell = coverage?.[oovKey];
+  const handleSelect = (m) => {
+    if (compareMode) {
+      if (compareList.find(x => x.id === m.id)) {
+        setCompareList(compareList.filter(x => x.id !== m.id));
+      } else if (compareList.length < 4) {
+        setCompareList([...compareList, m]);
+      }
+    } else {
+      setSelected(m);
+    }
+  };
 
-                          // IMPROVED COLOR SCHEME - Higher contrast
-                          let bgColor, borderColor, symbolColor;
-                          if (cell?.coverage === "primary") {
-                            bgColor = "#DCFCE7";      // Stronger green
-                            borderColor = "#86EFAC";   // Brighter green border
-                            symbolColor = "#166534";   // Dark green symbol
-                          } else if (cell?.coverage === "partial") {
-                            bgColor = "#DBEAFE";      // Stronger blue
-                            borderColor = "#93C5FD";   // Brighter blue border
-                            symbolColor = "#1E40AF";   // Dark blue symbol
-                          } else {
-                            bgColor = "#F5F5F4";      // Light gray
-                            borderColor = "#D6D3D1";   // Gray border
-                            symbolColor = "#A8A29E";   // Medium gray symbol
-                          }
-
-                          return (
-                            <td
-                              key={oovKey}
-                              style={{
-                                padding: "20px 16px",
-                                textAlign: "center",
-                                background: bgColor,
-                                borderLeft: `2px solid ${borderColor}`,
-                                borderRight: `2px solid ${borderColor}`,
-                                fontSize: "28px",
-                                color: symbolColor,
-                                cursor: cell?.justification ? "pointer" : "default",
-                                transition: "all 0.2s",
-                              }}
-                              title={cell?.justification}
-                              onMouseEnter={(e) => {
-                                if (cell?.justification) {
-                                  e.currentTarget.style.transform = "scale(1.05)";
-                                  e.currentTarget.style.boxShadow = "0 4px 8px rgba(0,0,0,0.1)";
-                                }
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.transform = "scale(1)";
-                                e.currentTarget.style.boxShadow = "none";
-                              }}
-                            >
-                              {cell?.symbol || "○"}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Enhanced Legend */}
+  return (
+    <div style={{ minHeight: "100vh" }}>
+      {/* Header */}
+      <header style={{
+        position: "sticky", top: 0, zIndex: 50,
+        background: "rgba(5, 5, 8, 0.9)", backdropFilter: "blur(12px)",
+        borderBottom: "1px solid var(--border)",
+      }}>
+        <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "16px 32px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
             <div style={{
-              marginTop: "24px",
-              display: "flex",
-              gap: "32px",
-              alignItems: "center",
-              padding: "16px",
-              background: "#F5F5F4",
-              borderRadius: "4px"
-            }}>
-              <span style={{ fontSize: "14px", fontWeight: "600", color: "#1C1917" }}>Legend:</span>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ fontSize: "24px", color: "#166534" }}>✔</span>
-                <span style={{ fontSize: "14px", color: "#44403C" }}>Primary Coverage</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ fontSize: "24px", color: "#1E40AF" }}>◐</span>
-                <span style={{ fontSize: "14px", color: "#44403C" }}>Partial Coverage</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ fontSize: "24px", color: "#A8A29E" }}>✖</span>
-                <span style={{ fontSize: "14px", color: "#44403C" }}>Not Intended</span>
-              </div>
-            </div>
-
-            {/* Coverage Summary Stats */}
-            <div style={{
-              marginTop: "24px",
-              background: "#F8FAFC",
-              borderLeft: "4px solid #1E40AF",
-              padding: "16px",
-              borderRadius: "4px"
-            }}>
-              <h4 style={{ margin: "0 0 12px 0", fontSize: "14px", fontWeight: "600", color: "#1C1917" }}>
-                Coverage Summary
-              </h4>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", fontSize: "13px" }}>
-                {OOVS.map((oov, idx) => {
-                  const oovKey = `oov${idx + 1}_${oov.id.split("_")[1]}`;
-                  const primaryCount = COVERAGE_MATRIX.filter(c => c[oovKey]?.coverage === "primary").length;
-                  const partialCount = COVERAGE_MATRIX.filter(c => c[oovKey]?.coverage === "partial").length;
-
-                  return (
-                    <div key={oov.id}>
-                      <div style={{ fontWeight: "600", color: "#1C1917", marginBottom: "4px" }}>
-                        {oov.shortName}
-                      </div>
-                      <div style={{ color: "#78716C" }}>
-                        {primaryCount} primary, {partialCount} partial
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ==================================================================
-            TAB 3: MECHANISM DETAILS VIEW
-            ================================================================== */}
-        {activeTab === "mechanisms" && (
-          <div>
-            <div
-              style={{
-                background: "white",
-                border: "1px solid #E7E5E4",
-                borderRadius: "4px",
-                padding: "32px",
-              }}
-            >
-              {/* Mechanism Header */}
-              <h2 style={{ margin: "0 0 8px 0", fontSize: "24px", fontFamily: "Crimson Pro, serif", color: "#1C1917" }}>
-                {selectedMechanism.shortName}
-              </h2>
-              <p style={{ margin: "0 0 24px 0", fontSize: "14px", color: "#78716C", lineHeight: "1.6" }}>
-                {selectedMechanism.definition}
+              width: "10px", height: "10px", borderRadius: "50%",
+              background: "var(--accent)", boxShadow: "0 0 10px var(--accent)",
+            }} />
+            <div>
+              <h1 style={{ fontSize: "18px", fontWeight: 700, letterSpacing: "-0.02em" }}>VMFS Command Center</h1>
+              <p style={{ fontSize: "11px", color: "var(--text-muted)", letterSpacing: "0.05em" }}>
+                VERIFICATION MECHANISM FEASIBILITY SCORER
               </p>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: "8px" }}>
+            {["radar", "matrix", "list"].map(v => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                style={{
+                  padding: "8px 16px",
+                  background: view === v ? "var(--accent)" : "transparent",
+                  border: `1px solid ${view === v ? "var(--accent)" : "var(--border)"}`,
+                  borderRadius: "6px",
+                  color: view === v ? "var(--bg)" : "var(--text-dim)",
+                  fontSize: "12px",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  textTransform: "capitalize",
+                }}
+              >
+                {v}
+              </button>
+            ))}
+          </div>
+        </div>
+      </header>
 
-              {/* Two-Column Layout: Scores + Coverage */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginBottom: "24px" }}>
+      <main style={{ maxWidth: "1400px", margin: "0 auto", padding: "32px" }}>
+        {/* Stats Row */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "32px" }}>
+          {[
+            { label: "Mechanisms Analyzed", value: MECHANISMS.length, suffix: "" },
+            { label: "Top Scorer", value: topMechanism.vmfsScores.weightedAvg, suffix: "", decimals: 1, sub: topMechanism.shortName },
+            { label: "Avg Feasibility", value: avgScore, suffix: "/5", decimals: 1 },
+            { label: "Primary Coverage", value: coverage, suffix: "", sub: "OoV assignments" },
+          ].map((stat, i) => (
+            <div key={i} style={{
+              padding: "24px",
+              background: "var(--bg-card)",
+              border: "1px solid var(--border)",
+              borderRadius: "12px",
+            }}>
+              <div style={{ fontSize: "11px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "8px" }}>
+                {stat.label}
+              </div>
+              <div style={{ fontSize: "36px", fontWeight: 700, fontFamily: "var(--mono)", color: "var(--accent)" }}>
+                <Counter value={stat.value} suffix={stat.suffix} decimals={stat.decimals || 0} />
+              </div>
+              {stat.sub && <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "4px" }}>{stat.sub}</div>}
+            </div>
+          ))}
+        </div>
 
-                {/* Left Column: VMFS Scores */}
-                <div>
-                  <h3 style={{ margin: "0 0 16px 0", fontSize: "16px", color: "#1C1917" }}>VMFS Scores</h3>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                    {[
-                      { label: "Technical Feasibility", value: selectedMechanism.vmfsScores.technicalFeasibility, isNumeric: true },
-                      { label: "Political Tractability", value: selectedMechanism.vmfsScores.politicalTractability, isNumeric: true },
-                      { label: "Institutional Req", value: selectedMechanism.vmfsScores.institutionalReq, isNumeric: false },
-                      { label: "Sovereignty Impact", value: selectedMechanism.vmfsScores.sovereigntyImpact, isNumeric: true },
-                      { label: "Global South Adoptability", value: selectedMechanism.vmfsScores.globalSouthAdoptability, isNumeric: true },
-                    ].map((score, idx) => (
-                      <div key={idx} style={{ display: "flex", justifyContent: "space-between", padding: "12px", background: "#FAFAF9", borderRadius: "4px" }}>
-                        <span style={{ fontSize: "14px", color: "#44403C" }}>{score.label}</span>
-                        <span style={{ fontSize: "16px", fontWeight: "700", fontFamily: "IBM Plex Mono, monospace", color: "#1C1917" }}>
-                          {score.isNumeric ? score.value.toFixed(1) : score.value.toUpperCase()}
-                        </span>
-                      </div>
-                    ))}
+        {/* Key Finding Banner */}
+        <div style={{
+          padding: "20px 24px",
+          background: "linear-gradient(90deg, rgba(0, 212, 170, 0.1), rgba(75, 123, 236, 0.1))",
+          border: "1px solid rgba(0, 212, 170, 0.2)",
+          borderRadius: "12px",
+          marginBottom: "32px",
+          display: "flex",
+          alignItems: "center",
+          gap: "16px",
+        }}>
+          <span style={{ fontSize: "24px" }}>💡</span>
+          <div>
+            <strong style={{ color: "var(--accent)" }}>Key Insight:</strong>
+            <span style={{ color: "var(--text-dim)", marginLeft: "8px" }}>
+              No single mechanism achieves scores above 4.0 across all dimensions. Layered approaches combining multiple mechanisms are required for robust verification.
+            </span>
+          </div>
+        </div>
 
-                    {/* Weighted Average Highlight */}
-                    <div style={{ marginTop: "8px", padding: "16px", background: "#F8FAFC", borderRadius: "4px", borderLeft: "4px solid #1E40AF" }}>
-                      <span style={{ fontSize: "12px", color: "#78716C", display: "block", marginBottom: "4px" }}>Weighted Average</span>
-                      <div style={{ fontSize: "28px", fontWeight: "700", fontFamily: "IBM Plex Mono, monospace", color: "#1C1917" }}>
-                        {selectedMechanism.vmfsScores.weightedAvg.toFixed(1)}
-                      </div>
-                    </div>
+        {/* Main View */}
+        <div style={{ display: "grid", gridTemplateColumns: view === "list" ? "1fr" : "1fr 1fr", gap: "24px" }}>
+          {/* Left: Visualization */}
+          {view !== "list" && (
+            <div style={{
+              padding: "24px",
+              background: "var(--bg-card)",
+              border: "1px solid var(--border)",
+              borderRadius: "16px",
+            }}>
+              <h3 style={{ fontSize: "13px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "20px" }}>
+                {view === "radar" ? "Mechanism Comparison Radar" : "Feasibility Matrix"}
+              </h3>
+
+              {view === "radar" && (
+                <>
+                  <div style={{ display: "flex", justifyContent: "center", marginBottom: "20px" }}>
+                    <RadarChart mechanisms={sorted.slice(0, 4)} selected={selected} onSelect={handleSelect} />
                   </div>
-                </div>
-
-                {/* Right Column: OoV Coverage */}
-                <div>
-                  <h3 style={{ margin: "0 0 16px 0", fontSize: "16px", color: "#1C1917" }}>OoV Coverage</h3>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                    {OOVS.map((oov, oovIndex) => {
-                      const coverage = COVERAGE_MATRIX.find((c) => c.mechanismId === selectedMechanism.id);
-                      // Map OoV index to the correct key in coverage object
-                      const oovKeys = ["oov1_compute", "oov2_lineage", "oov3_deployment", "oov4_post_training"];
-                      const oovKey = oovKeys[oovIndex];
-                      const cell = coverage?.[oovKey];
-
-                      // Get symbol and color
-                      const symbol = cell?.symbol || "○";
-                      let symbolColor, bgColor, coverageText;
-
-                      if (cell?.coverage === "primary") {
-                        symbolColor = "#166534";
-                        bgColor = "#DCFCE7";
-                        coverageText = "Primary";
-                      } else if (cell?.coverage === "partial") {
-                        symbolColor = "#1E40AF";
-                        bgColor = "#DBEAFE";
-                        coverageText = "Partial";
-                      } else {
-                        symbolColor = "#A8A29E";
-                        bgColor = "#F5F5F4";
-                        coverageText = "Not Intended";
-                      }
-
+                  <div style={{ display: "flex", justifyContent: "center", gap: "16px", flexWrap: "wrap" }}>
+                    {sorted.slice(0, 4).map((m, i) => {
+                      const colors = ["#4b7bec", "#a855f7", "#fbbf24", "#22c55e"];
                       return (
                         <div
-                          key={oov.id}
+                          key={m.id}
+                          onClick={() => handleSelect(m)}
                           style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "12px",
-                            padding: "12px",
-                            background: bgColor,
-                            borderRadius: "4px",
-                            border: `1px solid ${symbolColor}40`,
+                            display: "flex", alignItems: "center", gap: "8px",
+                            padding: "6px 12px",
+                            background: selected?.id === m.id ? `${colors[i]}20` : "transparent",
+                            border: `1px solid ${selected?.id === m.id ? colors[i] : "var(--border)"}`,
+                            borderRadius: "6px", cursor: "pointer", transition: "all 0.2s",
                           }}
-                          title={cell?.justification || "No coverage information"}
                         >
-                          <span style={{ fontSize: "24px", color: symbolColor, fontWeight: "600" }}>{symbol}</span>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: "14px", fontWeight: "600", color: "#1C1917" }}>{oov.shortName}</div>
-                            <div style={{ fontSize: "12px", color: "#78716C" }}>{coverageText}</div>
-                          </div>
+                          <div style={{ width: "10px", height: "10px", borderRadius: "2px", background: colors[i] }} />
+                          <span style={{ fontSize: "12px" }}>{m.shortName}</span>
                         </div>
                       );
                     })}
                   </div>
+                </>
+              )}
+
+              {view === "matrix" && (
+                <div style={{ display: "flex", justifyContent: "center" }}>
+                  <ScatterPlot mechanisms={MECHANISMS} selected={selected} onSelect={handleSelect} />
                 </div>
-              </div>
+              )}
+            </div>
+          )}
 
-              {/* What it produces */}
-              <div style={{ marginBottom: "24px" }}>
-                <h3 style={{ margin: "0 0 12px 0", fontSize: "16px", color: "#1C1917" }}>What it produces</h3>
-                <ul style={{ margin: 0, paddingLeft: "20px", color: "#44403C", lineHeight: "1.6" }}>
-                  {selectedMechanism.evidenceProduced.map((item, idx) => (
-                    <li key={idx} style={{ marginBottom: "4px" }}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* What it verifies */}
-              <div style={{ marginBottom: "24px" }}>
-                <h3 style={{ margin: "0 0 12px 0", fontSize: "16px", color: "#1C1917" }}>What it can verify</h3>
-                <ul style={{ margin: 0, paddingLeft: "20px", color: "#44403C", lineHeight: "1.6" }}>
-                  {selectedMechanism.whatItVerifies.map((item, idx) => (
-                    <li key={idx} style={{ marginBottom: "4px" }}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Dependencies */}
-              <div style={{ marginBottom: "24px" }}>
-                <h3 style={{ margin: "0 0 12px 0", fontSize: "16px", color: "#1C1917" }}>What it needs to work</h3>
-                <ul style={{ margin: 0, paddingLeft: "20px", color: "#44403C", lineHeight: "1.6" }}>
-                  {selectedMechanism.dependencies.map((item, idx) => (
-                    <li key={idx} style={{ marginBottom: "4px" }}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Limitations Panel */}
-              <div
-                style={{
-                  background: "#FFF7ED",
-                  borderLeft: "4px solid #EA580C",
-                  padding: "16px",
-                  borderRadius: "4px",
-                  marginBottom: "24px",
-                }}
-              >
-                <h3 style={{ margin: "0 0 12px 0", fontSize: "16px", color: "#1C1917" }}>⚠️ Biggest Limitations</h3>
-                <p style={{ margin: "0 0 8px 0", fontSize: "14px", color: "#44403C", lineHeight: "1.6" }}>
-                  <strong>Primary:</strong> {selectedMechanism.limitations.primary}
-                </p>
-                <p style={{ margin: 0, fontSize: "14px", color: "#44403C", lineHeight: "1.6" }}>
-                  <strong>Technical:</strong> {selectedMechanism.limitations.technical}
-                </p>
-              </div>
-
-              {/* Evasion Modes */}
-              <div style={{ marginBottom: "24px" }}>
-                <h3 style={{ margin: "0 0 12px 0", fontSize: "16px", color: "#1C1917" }}>🔓 Known Evasion Modes</h3>
-                <ul style={{ margin: 0, paddingLeft: "20px", color: "#44403C", lineHeight: "1.6" }}>
-                  {selectedMechanism.evasionModes.map((item, idx) => (
-                    <li key={idx} style={{ marginBottom: "4px" }}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Citations */}
-              <div style={{ fontSize: "12px", color: "#78716C" }}>
-                <strong>Key References:</strong>{" "}
-                {selectedMechanism.citations.map((cite, idx) => (
-                  <span key={idx}>
-                    {cite}
-                    {idx < selectedMechanism.citations.length - 1 ? "; " : ""}
-                  </span>
-                ))}
-              </div>
+          {/* Right: Mechanism List */}
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <h3 style={{ fontSize: "13px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                All Mechanisms (Ranked)
+              </h3>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: view === "list" ? "repeat(3, 1fr)" : "1fr", gap: "12px" }}>
+              {sorted.map((m, i) => (
+                <MechanismCard
+                  key={m.id}
+                  m={m}
+                  index={i}
+                  isSelected={selected?.id === m.id}
+                  onClick={() => handleSelect(m)}
+                />
+              ))}
             </div>
           </div>
-        )}
-      </div>
+        </div>
+
+        {/* OoV Summary */}
+        <div style={{ marginTop: "32px" }}>
+          <h3 style={{ fontSize: "13px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "16px" }}>
+            Objects of Verification
+          </h3>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px" }}>
+            {OOVS.map((oov, i) => {
+              const key = `oov${i + 1}_${oov.id.split("_")[1]}`;
+              const primaryCount = COVERAGE_MATRIX.filter(c => c[key]?.coverage === "primary").length;
+              const partialCount = COVERAGE_MATRIX.filter(c => c[key]?.coverage === "partial").length;
+              return (
+                <div key={oov.id} style={{
+                  padding: "20px",
+                  background: "var(--bg-card)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "12px",
+                }}>
+                  <div style={{ fontSize: "14px", fontWeight: 600, marginBottom: "8px" }}>{oov.shortName}</div>
+                  <div style={{ fontSize: "12px", color: "var(--text-dim)", marginBottom: "12px" }}>{oov.definition.slice(0, 80)}...</div>
+                  <div style={{ display: "flex", gap: "12px" }}>
+                    <span style={{ fontSize: "12px", color: "var(--accent)" }}>● {primaryCount} primary</span>
+                    <span style={{ fontSize: "12px", color: "var(--blue)" }}>◐ {partialCount} partial</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </main>
+
+      {/* Detail Modal */}
+      <DetailPanel mechanism={selected} onClose={() => setSelected(null)} />
     </div>
   );
 }
