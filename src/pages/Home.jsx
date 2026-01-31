@@ -7,6 +7,9 @@ export default function HomePage() {
     const avgScore = MECHANISMS.reduce((a, m) => a + m.vmfsScores.weightedAvg, 0) / MECHANISMS.length;
     const topScore = Math.max(...MECHANISMS.map(m => m.vmfsScores.weightedAvg));
 
+    // OoV icons as simple text abbreviations
+    const oovLabels = ["01", "02", "03", "04"];
+
     return (
         <Layout>
             {/* Hero Section */}
@@ -29,7 +32,7 @@ export default function HomePage() {
                     transform: "translateX(-50%)",
                     width: "800px",
                     height: "600px",
-                    background: "radial-gradient(ellipse, rgba(50, 215, 75, 0.08) 0%, transparent 70%)",
+                    background: "radial-gradient(ellipse, rgba(50, 215, 75, 0.06) 0%, transparent 70%)",
                     pointerEvents: "none",
                 }} />
 
@@ -39,14 +42,14 @@ export default function HomePage() {
                     alignItems: "center",
                     gap: "8px",
                     padding: "8px 16px",
-                    background: "rgba(50, 215, 75, 0.1)",
-                    border: "1px solid rgba(50, 215, 75, 0.2)",
+                    background: "rgba(50, 215, 75, 0.08)",
+                    border: "1px solid rgba(50, 215, 75, 0.15)",
                     borderRadius: "100px",
                     marginBottom: "24px",
                     animation: "fadeIn 0.6s var(--ease)",
                 }}>
                     <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--accent)" }} />
-                    <span style={{ fontSize: "13px", color: "var(--accent)" }}>AI Safety Research</span>
+                    <span style={{ fontSize: "12px", color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.1em" }}>AI Governance Research</span>
                 </div>
 
                 {/* Main headline */}
@@ -64,15 +67,15 @@ export default function HomePage() {
 
                 {/* Subtitle */}
                 <p style={{
-                    fontSize: "18px",
+                    fontSize: "17px",
                     color: "var(--text-secondary)",
-                    maxWidth: "600px",
+                    maxWidth: "580px",
                     lineHeight: 1.7,
                     marginBottom: "40px",
                     animation: "slideUp 0.6s var(--ease) 0.2s both",
                 }}>
-                    A comprehensive framework for evaluating AI governance verification mechanisms
-                    across technical feasibility, political tractability, and global adoption dimensions.
+                    A systematic framework for evaluating AI governance verification mechanisms
+                    across technical, political, and global adoption dimensions.
                 </p>
 
                 {/* CTA Buttons */}
@@ -83,12 +86,12 @@ export default function HomePage() {
                 }}>
                     <Link to="/dashboard" style={{ textDecoration: "none" }}>
                         <Button variant="primary">
-                            Explore Dashboard →
+                            Explore Dashboard
                         </Button>
                     </Link>
                     <Link to="/framework" style={{ textDecoration: "none" }}>
                         <Button variant="secondary">
-                            Learn the Framework
+                            View Framework
                         </Button>
                     </Link>
                 </div>
@@ -96,50 +99,63 @@ export default function HomePage() {
                 {/* Stats */}
                 <div style={{
                     display: "flex",
-                    gap: "48px",
+                    gap: "56px",
                     marginTop: "80px",
                     animation: "fadeIn 0.6s var(--ease) 0.5s both",
                 }}>
                     {[
-                        { value: MECHANISMS.length, label: "Mechanisms Analyzed" },
-                        { value: OOVS.length, label: "Verification Objectives" },
-                        { value: avgScore.toFixed(1), label: "Average Feasibility" },
-                        { value: topScore.toFixed(1), label: "Highest Score" },
+                        { value: MECHANISMS.length, label: "Mechanisms" },
+                        { value: OOVS.length, label: "Verification Objects" },
+                        { value: avgScore.toFixed(1), label: "Avg. Feasibility" },
+                        { value: topScore.toFixed(1), label: "Top Score" },
                     ].map((stat, i) => (
                         <div key={i} style={{ textAlign: "center" }}>
                             <div style={{
-                                fontSize: "36px",
+                                fontSize: "32px",
                                 fontWeight: 700,
                                 fontFamily: "var(--mono)",
                                 color: "var(--accent)",
                             }}>{stat.value}</div>
                             <div style={{
-                                fontSize: "12px",
+                                fontSize: "11px",
                                 color: "var(--text-tertiary)",
                                 marginTop: "4px",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.05em",
                             }}>{stat.label}</div>
                         </div>
                     ))}
                 </div>
             </section>
 
-            {/* Key Insight Section */}
+            {/* Key Finding Section */}
             <section style={{
                 padding: "80px 24px",
-                maxWidth: "1200px",
+                maxWidth: "1000px",
                 margin: "0 auto",
             }}>
                 <div style={{
                     padding: "32px",
-                    background: "linear-gradient(135deg, rgba(50, 215, 75, 0.06), rgba(10, 132, 255, 0.06))",
-                    borderRadius: "24px",
-                    border: "1px solid rgba(50, 215, 75, 0.1)",
+                    background: "rgba(255, 255, 255, 0.02)",
+                    borderRadius: "20px",
+                    border: "1px solid var(--border)",
                 }}>
                     <div style={{ display: "flex", alignItems: "flex-start", gap: "20px" }}>
-                        <span style={{ fontSize: "32px" }}>💡</span>
+                        <div style={{
+                            width: "40px",
+                            height: "40px",
+                            borderRadius: "10px",
+                            background: "rgba(50, 215, 75, 0.1)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0,
+                        }}>
+                            <span style={{ color: "var(--accent)", fontSize: "16px", fontWeight: 700 }}>!</span>
+                        </div>
                         <div>
-                            <h3 style={{ fontSize: "20px", fontWeight: 600, marginBottom: "12px" }}>Critical Finding</h3>
-                            <p style={{ fontSize: "16px", color: "var(--text-secondary)", lineHeight: 1.7, maxWidth: "800px" }}>
+                            <h3 style={{ fontSize: "16px", fontWeight: 600, marginBottom: "8px", color: "var(--text)" }}>Key Finding</h3>
+                            <p style={{ fontSize: "15px", color: "var(--text-secondary)", lineHeight: 1.7 }}>
                                 {KEY_FINDINGS[0]?.finding || "No single verification mechanism achieves high scores across all dimensions. Effective AI safety governance requires a layered approach combining multiple verification methods."}
                             </p>
                         </div>
@@ -149,38 +165,40 @@ export default function HomePage() {
 
             {/* OoV Preview */}
             <section style={{
-                padding: "80px 24px",
+                padding: "60px 24px 100px",
                 maxWidth: "1200px",
                 margin: "0 auto",
             }}>
                 <div style={{ textAlign: "center", marginBottom: "48px" }}>
-                    <h2 style={{ fontSize: "32px", fontWeight: 700, marginBottom: "12px" }}>Objects of Verification</h2>
-                    <p style={{ fontSize: "16px", color: "var(--text-secondary)" }}>Four key dimensions for comprehensive AI verification</p>
+                    <h2 style={{ fontSize: "28px", fontWeight: 700, marginBottom: "8px" }}>Objects of Verification</h2>
+                    <p style={{ fontSize: "15px", color: "var(--text-secondary)" }}>Four dimensions for comprehensive AI verification coverage</p>
                 </div>
 
                 <div style={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-                    gap: "20px",
+                    gridTemplateColumns: "repeat(4, 1fr)",
+                    gap: "16px",
                 }}>
                     {OOVS.map((oov, i) => (
-                        <BentoCard key={oov.id} hoverable style={{ padding: "28px" }}>
+                        <BentoCard key={oov.id} hoverable style={{ padding: "24px" }}>
                             <div style={{
-                                width: "48px",
-                                height: "48px",
-                                borderRadius: "12px",
-                                background: `linear-gradient(135deg, ${["#0a84ff", "#bf5af2", "#ff9f0a", "#32d74b"][i]}20, transparent)`,
+                                width: "36px",
+                                height: "36px",
+                                borderRadius: "8px",
+                                background: `${["#0a84ff", "#bf5af2", "#ff9f0a", "#32d74b"][i]}15`,
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
-                                marginBottom: "16px",
+                                marginBottom: "14px",
+                                fontSize: "12px",
+                                fontWeight: 700,
+                                fontFamily: "var(--mono)",
+                                color: ["#0a84ff", "#bf5af2", "#ff9f0a", "#32d74b"][i],
                             }}>
-                                <span style={{ fontSize: "24px" }}>
-                                    {["🖥️", "🔗", "🚀", "🔄"][i]}
-                                </span>
+                                {oovLabels[i]}
                             </div>
-                            <h3 style={{ fontSize: "18px", fontWeight: 600, marginBottom: "8px" }}>{oov.shortName}</h3>
-                            <p style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.6 }}>
+                            <h3 style={{ fontSize: "15px", fontWeight: 600, marginBottom: "6px" }}>{oov.shortName}</h3>
+                            <p style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.5 }}>
                                 {oov.definition}
                             </p>
                         </BentoCard>
@@ -190,7 +208,7 @@ export default function HomePage() {
                 <div style={{ textAlign: "center", marginTop: "40px" }}>
                     <Link to="/framework" style={{ textDecoration: "none" }}>
                         <Button variant="ghost">
-                            Learn More About the Framework →
+                            View Full Framework
                         </Button>
                     </Link>
                 </div>
@@ -198,12 +216,12 @@ export default function HomePage() {
 
             {/* Footer */}
             <footer style={{
-                padding: "40px 24px",
+                padding: "32px 24px",
                 borderTop: "1px solid var(--border)",
                 textAlign: "center",
             }}>
-                <p style={{ fontSize: "13px", color: "var(--text-tertiary)" }}>
-                    VMFS Command Center • AI Safety Hackathon 2026
+                <p style={{ fontSize: "12px", color: "var(--text-tertiary)" }}>
+                    VMFS Command Center
                 </p>
             </footer>
         </Layout>

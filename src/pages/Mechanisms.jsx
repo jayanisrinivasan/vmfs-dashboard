@@ -162,7 +162,7 @@ function MechanismModal({ mechanism, isOpen, onClose }) {
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
                         <div>
                             <h4 style={{ fontSize: "11px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "12px" }}>
-                                ⚠️ Limitations
+                                Limitations
                             </h4>
                             <div style={{
                                 padding: "16px",
@@ -177,7 +177,7 @@ function MechanismModal({ mechanism, isOpen, onClose }) {
                         </div>
                         <div>
                             <h4 style={{ fontSize: "11px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "12px" }}>
-                                🎯 Evasion Vectors
+                                Evasion Vectors
                             </h4>
                             <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                                 {mechanism.evasionModes.map((e, i) => (
@@ -191,7 +191,7 @@ function MechanismModal({ mechanism, isOpen, onClose }) {
                     {mechanism.evidence && mechanism.evidence.length > 0 && (
                         <div style={{ marginTop: "28px" }}>
                             <h4 style={{ fontSize: "11px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "12px" }}>
-                                📚 Evidence & Sources
+                                Evidence & Sources
                             </h4>
                             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                                 {mechanism.evidence.slice(0, 3).map((e, i) => (

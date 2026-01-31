@@ -164,20 +164,24 @@ export default function FrameworkPage() {
                     }}>
                         {OOVS.map((oov, i) => {
                             const colors = ["#0a84ff", "#bf5af2", "#ff9f0a", "#32d74b"];
-                            const icons = ["🖥️", "🔗", "🚀", "🔄"];
+                            const labels = ["01", "02", "03", "04"];
                             return (
                                 <BentoCard key={oov.id} hoverable={false} style={{ padding: "24px" }}>
                                     <div style={{
-                                        width: "56px",
-                                        height: "56px",
-                                        borderRadius: "14px",
-                                        background: `linear-gradient(135deg, ${colors[i]}20, transparent)`,
+                                        width: "44px",
+                                        height: "44px",
+                                        borderRadius: "10px",
+                                        background: `${colors[i]}15`,
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
-                                        marginBottom: "16px",
+                                        marginBottom: "14px",
+                                        fontSize: "14px",
+                                        fontWeight: 700,
+                                        fontFamily: "var(--mono)",
+                                        color: colors[i],
                                     }}>
-                                        <span style={{ fontSize: "28px" }}>{icons[i]}</span>
+                                        {labels[i]}
                                     </div>
                                     <h3 style={{ fontSize: "16px", fontWeight: 600, marginBottom: "8px", color: colors[i] }}>
                                         {oov.shortName}

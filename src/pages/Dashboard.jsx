@@ -268,7 +268,7 @@ function DetailPanel({ mechanism }) {
             </div>
 
             <div style={{ padding: "12px", background: "rgba(255, 69, 58, 0.05)", borderRadius: "8px" }}>
-                <div style={{ fontSize: "10px", color: "var(--red)", textTransform: "uppercase", marginBottom: "4px" }}>⚠️ Key Limitation</div>
+                <div style={{ fontSize: "10px", color: "var(--red)", textTransform: "uppercase", marginBottom: "4px" }}>Key Limitation</div>
                 <p style={{ fontSize: "12px", color: "var(--text-secondary)", lineHeight: 1.5 }}>{mechanism.limitations.primary}</p>
             </div>
         </div>
@@ -322,7 +322,7 @@ export default function DashboardPage() {
                             {selected && <span style={{ fontSize: "12px", color: "var(--accent)" }}>{selected.shortName}</span>}
                         </div>
                         <RadarChart mechanism={selected} customScores={customScores} onScoreChange={handleScoreChange} />
-                        <p style={{ textAlign: "center", fontSize: "10px", color: "var(--text-tertiary)", marginTop: "8px" }}>💡 Drag points to explore scenarios</p>
+                        <p style={{ textAlign: "center", fontSize: "10px", color: "var(--text-tertiary)", marginTop: "8px" }}>Drag points to explore scenarios</p>
                     </BentoCard>
 
                     {/* Matrix */}
