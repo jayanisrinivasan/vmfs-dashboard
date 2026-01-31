@@ -35,25 +35,25 @@ export default function App() {
     : sortedMechanisms;
 
   // ==========================================================================
-  // HELPER FUNCTIONS - COLOR CODING
+  // HELPER FUNCTIONS - COLOR CODING (HIGH CONTRAST)
   // ==========================================================================
 
-  // Get text color based on score (1-5 scale)
+  // Get text color based on score (1-5 scale) - DARKER for readability
   const getScoreColor = (score) => {
-    if (score >= 4.5) return "#065F46"; // deep teal
-    if (score >= 3.5) return "#1E40AF"; // blue
-    if (score >= 2.5) return "#78716C"; // gray
-    if (score >= 1.5) return "#EA580C"; // orange
-    return "#B91C1C"; // crimson
+    if (score >= 4.5) return "#14532D"; // very dark green
+    if (score >= 3.5) return "#1E3A8A"; // very dark blue
+    if (score >= 2.5) return "#57534E"; // dark gray
+    if (score >= 1.5) return "#9A3412"; // dark orange
+    return "#7F1D1D"; // dark red
   };
 
-  // Get background tint based on score
+  // Get background color based on score - STRONGER colors
   const getScoreBgColor = (score) => {
-    if (score >= 4.5) return "#F0FDF4"; // light green
-    if (score >= 3.5) return "#EFF6FF"; // light blue
-    if (score >= 2.5) return "#FAFAF9"; // neutral
-    if (score >= 1.5) return "#FFF7ED"; // light orange
-    return "#FEF2F2"; // light red
+    if (score >= 4.5) return "#BBF7D0"; // strong green
+    if (score >= 3.5) return "#BFDBFE"; // strong blue
+    if (score >= 2.5) return "#E7E5E4"; // medium gray
+    if (score >= 1.5) return "#FED7AA"; // strong orange
+    return "#FECACA"; // strong red
   };
 
   // ==========================================================================
@@ -212,28 +212,85 @@ export default function App() {
                 {/* Table Header */}
                 <thead>
                   <tr style={{ background: "#F5F5F4" }}>
-                    <th style={{ padding: "12px", textAlign: "left", fontSize: "12px", fontWeight: "600", color: "#78716C", borderBottom: "1px solid #E7E5E4" }}>
+                    <th style={{
+                      padding: "16px",
+                      textAlign: "left",
+                      fontSize: "14px",
+                      fontWeight: "700",
+                      color: "#1C1917",
+                      borderBottom: "2px solid #A8A29E",
+                      minWidth: "220px"
+                    }}>
                       Mechanism
                     </th>
-                    <th style={{ padding: "12px", textAlign: "center", fontSize: "12px", fontWeight: "600", color: "#78716C", borderBottom: "1px solid #E7E5E4" }} title="Technical Feasibility">
+                    <th style={{
+                      padding: "16px",
+                      textAlign: "center",
+                      fontSize: "14px",
+                      fontWeight: "700",
+                      color: "#1C1917",
+                      borderBottom: "2px solid #A8A29E"
+                    }} title="Technical Feasibility (1-5): Can we build this with current/near-term technology?">
                       TF
                     </th>
-                    <th style={{ padding: "12px", textAlign: "center", fontSize: "12px", fontWeight: "600", color: "#78716C", borderBottom: "1px solid #E7E5E4" }} title="Political Tractability">
+                    <th style={{
+                      padding: "16px",
+                      textAlign: "center",
+                      fontSize: "14px",
+                      fontWeight: "700",
+                      color: "#1C1917",
+                      borderBottom: "2px solid #A8A29E"
+                    }} title="Political Tractability (1-5): Will states and labs agree to this?">
                       PT
                     </th>
-                    <th style={{ padding: "12px", textAlign: "center", fontSize: "12px", fontWeight: "600", color: "#78716C", borderBottom: "1px solid #E7E5E4" }} title="Institutional Requirements">
+                    <th style={{
+                      padding: "16px",
+                      textAlign: "center",
+                      fontSize: "14px",
+                      fontWeight: "700",
+                      color: "#1C1917",
+                      borderBottom: "2px solid #A8A29E"
+                    }} title="Institutional Requirements: What bodies/agreements are needed? (Low/Medium/High)">
                       IR
                     </th>
-                    <th style={{ padding: "12px", textAlign: "center", fontSize: "12px", fontWeight: "600", color: "#78716C", borderBottom: "1px solid #E7E5E4" }} title="Sovereignty Impact">
+                    <th style={{
+                      padding: "16px",
+                      textAlign: "center",
+                      fontSize: "14px",
+                      fontWeight: "700",
+                      color: "#1C1917",
+                      borderBottom: "2px solid #A8A29E"
+                    }} title="Sovereignty Impact (1-5): How intrusive? Higher = less intrusive">
                       SI
                     </th>
-                    <th style={{ padding: "12px", textAlign: "center", fontSize: "12px", fontWeight: "600", color: "#78716C", borderBottom: "1px solid #E7E5E4" }} title="Global South Adoptability">
+                    <th style={{
+                      padding: "16px",
+                      textAlign: "center",
+                      fontSize: "14px",
+                      fontWeight: "700",
+                      color: "#1C1917",
+                      borderBottom: "2px solid #A8A29E"
+                    }} title="Global South Adoptability (1-5): Can developing nations participate meaningfully?">
                       GSA
                     </th>
-                    <th style={{ padding: "12px", textAlign: "center", fontSize: "12px", fontWeight: "600", color: "#78716C", borderBottom: "1px solid #E7E5E4" }}>
+                    <th style={{
+                      padding: "16px",
+                      textAlign: "center",
+                      fontSize: "14px",
+                      fontWeight: "700",
+                      color: "#1C1917",
+                      borderBottom: "2px solid #A8A29E"
+                    }}>
                       Avg
                     </th>
-                    <th style={{ padding: "12px", textAlign: "center", fontSize: "12px", fontWeight: "600", color: "#78716C", borderBottom: "1px solid #E7E5E4" }}>
+                    <th style={{
+                      padding: "16px",
+                      textAlign: "center",
+                      fontSize: "14px",
+                      fontWeight: "700",
+                      color: "#1C1917",
+                      borderBottom: "2px solid #A8A29E"
+                    }}>
                       Coverage
                     </th>
                   </tr>
@@ -271,22 +328,30 @@ export default function App() {
                           }
                         }}
                       >
-                        {/* Mechanism Name */}
-                        <td style={{ padding: "16px", borderBottom: "1px solid #E7E5E4", fontWeight: "500" }}>
+                        {/* Mechanism Name - FIXED to show actual name */}
+                        <td style={{
+                          padding: "18px 16px",
+                          borderBottom: "1px solid #E7E5E4",
+                          fontWeight: "600",
+                          fontSize: "14px",
+                          color: "#1C1917"
+                        }}>
                           {mechanism.shortName}
                         </td>
 
                         {/* Technical Feasibility */}
                         <td
                           style={{
-                            padding: "16px",
+                            padding: "18px 16px",
                             textAlign: "center",
                             borderBottom: "1px solid #E7E5E4",
                             background: getScoreBgColor(mechanism.vmfsScores.technicalFeasibility),
                             color: getScoreColor(mechanism.vmfsScores.technicalFeasibility),
-                            fontWeight: "600",
+                            fontWeight: "700",
+                            fontSize: "15px",
                             fontFamily: "IBM Plex Mono, monospace",
                           }}
+                          title={`Technical Feasibility: ${mechanism.vmfsScores.technicalFeasibility}/5`}
                         >
                           {mechanism.vmfsScores.technicalFeasibility.toFixed(1)}
                         </td>
@@ -294,14 +359,16 @@ export default function App() {
                         {/* Political Tractability */}
                         <td
                           style={{
-                            padding: "16px",
+                            padding: "18px 16px",
                             textAlign: "center",
                             borderBottom: "1px solid #E7E5E4",
                             background: getScoreBgColor(mechanism.vmfsScores.politicalTractability),
                             color: getScoreColor(mechanism.vmfsScores.politicalTractability),
-                            fontWeight: "600",
+                            fontWeight: "700",
+                            fontSize: "15px",
                             fontFamily: "IBM Plex Mono, monospace",
                           }}
+                          title={`Political Tractability: ${mechanism.vmfsScores.politicalTractability}/5`}
                         >
                           {mechanism.vmfsScores.politicalTractability.toFixed(1)}
                         </td>
@@ -309,13 +376,17 @@ export default function App() {
                         {/* Institutional Requirements */}
                         <td
                           style={{
-                            padding: "16px",
+                            padding: "18px 16px",
                             textAlign: "center",
                             borderBottom: "1px solid #E7E5E4",
-                            fontSize: "12px",
-                            fontWeight: "600",
-                            color: mechanism.vmfsScores.institutionalReq === "high" ? "#B91C1C" : mechanism.vmfsScores.institutionalReq === "medium" ? "#EA580C" : "#065F46",
+                            fontSize: "14px",
+                            fontWeight: "700",
+                            background: mechanism.vmfsScores.institutionalReq === "low" ? "#BBF7D0" :
+                                       mechanism.vmfsScores.institutionalReq === "medium" ? "#FED7AA" : "#FECACA",
+                            color: mechanism.vmfsScores.institutionalReq === "low" ? "#14532D" :
+                                   mechanism.vmfsScores.institutionalReq === "medium" ? "#9A3412" : "#7F1D1D",
                           }}
+                          title={`Institutional Requirements: ${mechanism.vmfsScores.institutionalReq}`}
                         >
                           {mechanism.vmfsScores.institutionalReq.toUpperCase()[0]}
                         </td>
@@ -323,14 +394,16 @@ export default function App() {
                         {/* Sovereignty Impact */}
                         <td
                           style={{
-                            padding: "16px",
+                            padding: "18px 16px",
                             textAlign: "center",
                             borderBottom: "1px solid #E7E5E4",
                             background: getScoreBgColor(mechanism.vmfsScores.sovereigntyImpact),
                             color: getScoreColor(mechanism.vmfsScores.sovereigntyImpact),
-                            fontWeight: "600",
+                            fontWeight: "700",
+                            fontSize: "15px",
                             fontFamily: "IBM Plex Mono, monospace",
                           }}
+                          title={`Sovereignty Impact: ${mechanism.vmfsScores.sovereigntyImpact}/5 (higher = less intrusive)`}
                         >
                           {mechanism.vmfsScores.sovereigntyImpact.toFixed(1)}
                         </td>
@@ -338,42 +411,64 @@ export default function App() {
                         {/* Global South Adoptability */}
                         <td
                           style={{
-                            padding: "16px",
+                            padding: "18px 16px",
                             textAlign: "center",
                             borderBottom: "1px solid #E7E5E4",
                             background: getScoreBgColor(mechanism.vmfsScores.globalSouthAdoptability),
                             color: getScoreColor(mechanism.vmfsScores.globalSouthAdoptability),
-                            fontWeight: "600",
+                            fontWeight: "700",
+                            fontSize: "15px",
                             fontFamily: "IBM Plex Mono, monospace",
                           }}
+                          title={`Global South Adoptability: ${mechanism.vmfsScores.globalSouthAdoptability}/5`}
                         >
                           {mechanism.vmfsScores.globalSouthAdoptability.toFixed(1)}
                         </td>
 
-                        {/* Weighted Average */}
+                        {/* Weighted Average - USE DIRECT VALUE FROM DATA */}
                         <td
                           style={{
-                            padding: "16px",
+                            padding: "18px 16px",
                             textAlign: "center",
                             borderBottom: "1px solid #E7E5E4",
                             fontWeight: "700",
-                            fontSize: "16px",
+                            fontSize: "17px",
                             fontFamily: "IBM Plex Mono, monospace",
+                            background: "#F5F5F4",
+                            color: "#1C1917"
                           }}
+                          title={`Overall Weighted Average: ${mechanism.vmfsScores.weightedAvg}/5`}
                         >
                           {mechanism.vmfsScores.weightedAvg.toFixed(1)}
                         </td>
 
-                        {/* Coverage Symbols */}
+                        {/* Coverage Symbols - FIXED VISIBILITY */}
                         <td
                           style={{
-                            padding: "16px",
+                            padding: "18px 16px",
                             textAlign: "center",
                             borderBottom: "1px solid #E7E5E4",
-                            fontSize: "18px",
+                            fontSize: "20px",
+                            letterSpacing: "6px",
+                            fontWeight: "600",
+                            color: "#1C1917",
+                            background: "white"
                           }}
+                          title="OoV Coverage: Compute | Lineage | Deployment | Post-Training"
                         >
-                          {coverageSymbols.join(" ")}
+                          {coverageSymbols.map((symbol, idx) => {
+                            let symbolColor;
+                            if (symbol === "✔") symbolColor = "#166534"; // dark green
+                            else if (symbol === "◐") symbolColor = "#1E40AF"; // dark blue
+                            else if (symbol === "✖") symbolColor = "#A8A29E"; // gray
+                            else symbolColor = "#D6D3D1"; // light gray for ○
+
+                            return (
+                              <span key={idx} style={{ color: symbolColor, marginRight: idx < 3 ? "6px" : "0" }}>
+                                {symbol}
+                              </span>
+                            );
+                          })}
                         </td>
                       </tr>
                     );
@@ -382,13 +477,68 @@ export default function App() {
               </table>
             </div>
 
-            {/* Legend */}
-            <div style={{ marginTop: "16px", display: "flex", gap: "32px", fontSize: "12px", color: "#78716C" }}>
-              <div>
-                <strong>Columns:</strong> TF=Technical Feasibility, PT=Political Tractability, IR=Institutional Requirements, SI=Sovereignty Impact, GSA=Global South Adoptability
+            {/* Enhanced Legend with Color Examples */}
+            <div style={{
+              marginTop: "24px",
+              background: "#F5F5F4",
+              padding: "20px",
+              borderRadius: "4px",
+              border: "1px solid #E7E5E4"
+            }}>
+              <div style={{ marginBottom: "16px" }}>
+                <strong style={{ fontSize: "14px", color: "#1C1917" }}>Column Explanations:</strong>
               </div>
-              <div>
-                <strong>Coverage:</strong> ✔ Primary, ◐ Partial, ✖ None
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", fontSize: "13px", marginBottom: "16px" }}>
+                <div>
+                  <strong style={{ color: "#1C1917" }}>TF</strong> = Technical Feasibility<br/>
+                  <span style={{ color: "#78716C" }}>Can we build this now?</span>
+                </div>
+                <div>
+                  <strong style={{ color: "#1C1917" }}>PT</strong> = Political Tractability<br/>
+                  <span style={{ color: "#78716C" }}>Will states/labs agree?</span>
+                </div>
+                <div>
+                  <strong style={{ color: "#1C1917" }}>IR</strong> = Institutional Requirements<br/>
+                  <span style={{ color: "#78716C" }}>L=Low, M=Medium, H=High</span>
+                </div>
+                <div>
+                  <strong style={{ color: "#1C1917" }}>SI</strong> = Sovereignty Impact<br/>
+                  <span style={{ color: "#78716C" }}>Higher = less intrusive</span>
+                </div>
+                <div>
+                  <strong style={{ color: "#1C1917" }}>GSA</strong> = Global South Adoptability<br/>
+                  <span style={{ color: "#78716C" }}>Can developing nations join?</span>
+                </div>
+                <div>
+                  <strong style={{ color: "#1C1917" }}>Coverage</strong> = OoV Symbols<br/>
+                  <span style={{ color: "#78716C" }}>✔ Primary, ◐ Partial, ✖ None</span>
+                </div>
+              </div>
+
+              <div style={{ marginTop: "16px", paddingTop: "16px", borderTop: "1px solid #D6D3D1" }}>
+                <strong style={{ fontSize: "14px", color: "#1C1917", marginBottom: "8px", display: "block" }}>Color Scale (1-5 scores):</strong>
+                <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div style={{ width: "40px", height: "24px", background: "#BBF7D0", border: "1px solid #86EFAC", borderRadius: "2px" }}></div>
+                    <span style={{ fontSize: "13px", color: "#44403C" }}>4.5-5.0 (Excellent)</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div style={{ width: "40px", height: "24px", background: "#BFDBFE", border: "1px solid #93C5FD", borderRadius: "2px" }}></div>
+                    <span style={{ fontSize: "13px", color: "#44403C" }}>3.5-4.4 (Good)</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div style={{ width: "40px", height: "24px", background: "#E7E5E4", border: "1px solid #D6D3D1", borderRadius: "2px" }}></div>
+                    <span style={{ fontSize: "13px", color: "#44403C" }}>2.5-3.4 (Moderate)</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div style={{ width: "40px", height: "24px", background: "#FED7AA", border: "1px solid #FDBA74", borderRadius: "2px" }}></div>
+                    <span style={{ fontSize: "13px", color: "#44403C" }}>1.5-2.4 (Challenging)</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div style={{ width: "40px", height: "24px", background: "#FECACA", border: "1px solid #FCA5A5", borderRadius: "2px" }}></div>
+                    <span style={{ fontSize: "13px", color: "#44403C" }}>1.0-1.4 (Very Difficult)</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -574,24 +724,24 @@ export default function App() {
                   <h3 style={{ margin: "0 0 16px 0", fontSize: "16px", color: "#1C1917" }}>VMFS Scores</h3>
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                     {[
-                      { label: "Technical Feasibility", value: selectedMechanism.vmfsScores.technicalFeasibility },
-                      { label: "Political Tractability", value: selectedMechanism.vmfsScores.politicalTractability },
-                      { label: "Institutional Req", value: selectedMechanism.vmfsScores.institutionalReq },
-                      { label: "Sovereignty Impact", value: selectedMechanism.vmfsScores.sovereigntyImpact },
-                      { label: "Global South Adoptability", value: selectedMechanism.vmfsScores.globalSouthAdoptability },
+                      { label: "Technical Feasibility", value: selectedMechanism.vmfsScores.technicalFeasibility, isNumeric: true },
+                      { label: "Political Tractability", value: selectedMechanism.vmfsScores.politicalTractability, isNumeric: true },
+                      { label: "Institutional Req", value: selectedMechanism.vmfsScores.institutionalReq, isNumeric: false },
+                      { label: "Sovereignty Impact", value: selectedMechanism.vmfsScores.sovereigntyImpact, isNumeric: true },
+                      { label: "Global South Adoptability", value: selectedMechanism.vmfsScores.globalSouthAdoptability, isNumeric: true },
                     ].map((score, idx) => (
-                      <div key={idx} style={{ display: "flex", justifyContent: "space-between", padding: "8px", background: "#FAFAF9", borderRadius: "4px" }}>
+                      <div key={idx} style={{ display: "flex", justifyContent: "space-between", padding: "12px", background: "#FAFAF9", borderRadius: "4px" }}>
                         <span style={{ fontSize: "14px", color: "#44403C" }}>{score.label}</span>
-                        <span style={{ fontSize: "14px", fontWeight: "600", fontFamily: "IBM Plex Mono, monospace" }}>
-                          {typeof score.value === "number" ? score.value.toFixed(1) : score.value.toUpperCase()}
+                        <span style={{ fontSize: "16px", fontWeight: "700", fontFamily: "IBM Plex Mono, monospace", color: "#1C1917" }}>
+                          {score.isNumeric ? score.value.toFixed(1) : score.value.toUpperCase()}
                         </span>
                       </div>
                     ))}
 
                     {/* Weighted Average Highlight */}
-                    <div style={{ marginTop: "8px", padding: "12px", background: "#F8FAFC", borderRadius: "4px", borderLeft: "4px solid #1E40AF" }}>
-                      <span style={{ fontSize: "12px", color: "#78716C" }}>Weighted Average</span>
-                      <div style={{ fontSize: "24px", fontWeight: "700", fontFamily: "IBM Plex Mono, monospace", color: "#1C1917" }}>
+                    <div style={{ marginTop: "8px", padding: "16px", background: "#F8FAFC", borderRadius: "4px", borderLeft: "4px solid #1E40AF" }}>
+                      <span style={{ fontSize: "12px", color: "#78716C", display: "block", marginBottom: "4px" }}>Weighted Average</span>
+                      <div style={{ fontSize: "28px", fontWeight: "700", fontFamily: "IBM Plex Mono, monospace", color: "#1C1917" }}>
                         {selectedMechanism.vmfsScores.weightedAvg.toFixed(1)}
                       </div>
                     </div>
@@ -602,10 +752,31 @@ export default function App() {
                 <div>
                   <h3 style={{ margin: "0 0 16px 0", fontSize: "16px", color: "#1C1917" }}>OoV Coverage</h3>
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                    {OOVS.map((oov) => {
+                    {OOVS.map((oov, oovIndex) => {
                       const coverage = COVERAGE_MATRIX.find((c) => c.mechanismId === selectedMechanism.id);
-                      const oovKey = `oov${OOVS.indexOf(oov) + 1}_${oov.id.split("_")[1]}`;
+                      // Map OoV index to the correct key in coverage object
+                      const oovKeys = ["oov1_compute", "oov2_lineage", "oov3_deployment", "oov4_post_training"];
+                      const oovKey = oovKeys[oovIndex];
                       const cell = coverage?.[oovKey];
+
+                      // Get symbol and color
+                      const symbol = cell?.symbol || "○";
+                      let symbolColor, bgColor, coverageText;
+
+                      if (cell?.coverage === "primary") {
+                        symbolColor = "#166534";
+                        bgColor = "#DCFCE7";
+                        coverageText = "Primary";
+                      } else if (cell?.coverage === "partial") {
+                        symbolColor = "#1E40AF";
+                        bgColor = "#DBEAFE";
+                        coverageText = "Partial";
+                      } else {
+                        symbolColor = "#A8A29E";
+                        bgColor = "#F5F5F4";
+                        coverageText = "Not Intended";
+                      }
+
                       return (
                         <div
                           key={oov.id}
@@ -613,13 +784,18 @@ export default function App() {
                             display: "flex",
                             alignItems: "center",
                             gap: "12px",
-                            padding: "8px",
-                            background: "#FAFAF9",
+                            padding: "12px",
+                            background: bgColor,
                             borderRadius: "4px",
+                            border: `1px solid ${symbolColor}40`,
                           }}
+                          title={cell?.justification || "No coverage information"}
                         >
-                          <span style={{ fontSize: "20px" }}>{cell?.symbol || "○"}</span>
-                          <span style={{ fontSize: "14px", color: "#44403C" }}>{oov.shortName}</span>
+                          <span style={{ fontSize: "24px", color: symbolColor, fontWeight: "600" }}>{symbol}</span>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: "14px", fontWeight: "600", color: "#1C1917" }}>{oov.shortName}</div>
+                            <div style={{ fontSize: "12px", color: "#78716C" }}>{coverageText}</div>
+                          </div>
                         </div>
                       );
                     })}
