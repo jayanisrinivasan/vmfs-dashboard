@@ -214,6 +214,31 @@ export default function HomePage() {
                 </div>
             </section>
 
+            {/* Strategy Promo */}
+            <section style={{
+                padding: "0 24px 80px",
+                maxWidth: "800px",
+                margin: "0 auto",
+                textAlign: "center",
+            }}>
+                <div style={{
+                    padding: "40px",
+                    background: "linear-gradient(180deg, rgba(50, 215, 75, 0.05) 0%, transparent 100%)",
+                    border: "1px solid rgba(50, 215, 75, 0.1)",
+                    borderRadius: "24px",
+                }}>
+                    <h2 style={{ fontSize: "24px", fontWeight: 700, marginBottom: "12px" }}>Build Your Strategy</h2>
+                    <p style={{ fontSize: "15px", color: "var(--text-secondary)", marginBottom: "24px", lineHeight: 1.6 }}>
+                        Create a custom portfolio of verification mechanisms to analyze coverage gaps and maximize feasibility for your specific use case.
+                    </p>
+                    <Link to="/portfolio" style={{ textDecoration: "none" }}>
+                        <Button variant="primary" style={{ padding: "12px 32px" }}>
+                            Start Building Portfolio
+                        </Button>
+                    </Link>
+                </div>
+            </section>
+
             {/* Footer */}
             <footer style={{
                 padding: "32px 24px",
