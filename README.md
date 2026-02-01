@@ -1,16 +1,46 @@
-# React + Vite
+# VMFS Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+AI Safety Verification Mechanisms Framework Dashboard
 
-Currently, two official plugins are available:
+## Environment Variables
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### For Local Development
 
-## React Compiler
+Create a `.env` file in the root directory:
 
-The React Compiler is currently not compatible with SWC. See [this issue](https://github.com/vitejs/vite-plugin-react/issues/428) for tracking the progress.
+```
+VITE_GOOGLE_AI_API_KEY=your_google_ai_api_key_here
+```
 
-## Expanding the ESLint configuration
+### For Vercel Deployment
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+**IMPORTANT**: You must add the environment variable in Vercel's dashboard for the deployment to work.
+
+1. Go to your Vercel project: https://vercel.com/dashboard
+2. Select your project
+3. Go to **Settings** → **Environment Variables**
+4. Add a new variable:
+   - **Name**: `VITE_GOOGLE_AI_API_KEY`
+   - **Value**: Your Google AI API key
+   - **Environment**: Select all (Production, Preview, Development)
+5. Click **Save**
+6. **Redeploy** your application (go to Deployments → click the three dots on the latest deployment → Redeploy)
+
+### Getting a Google AI API Key
+
+1. Go to https://aistudio.google.com/app/apikey
+2. Create a new API key
+3. Copy the key and add it to your environment variables
+
+## Development
+
+```bash
+npm install
+npm run dev
+```
+
+## Build
+
+```bash
+npm run build
+```
