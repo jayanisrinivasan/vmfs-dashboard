@@ -204,17 +204,39 @@ function NewMechanismCard({ mechanism }) {
                 {['hardness', 'burden', 'intrusion', 'robustness'].map(dim => {
                     const score = mechanism.scores[dim];
                     const dimConfig = SCORE_DIMENSIONS[dim];
+                    
+                    // Get rubric label based on score
+                    let rubricLabel = "";
+                    if (score >= 4.5) {
+                        rubricLabel = dimConfig.labels[5] || "";
+                    } else if (score >= 2.5) {
+                        rubricLabel = dimConfig.labels[3] || "";
+                    } else {
+                        rubricLabel = dimConfig.labels[1] || "";
+                    }
+                    
                     return (
                         <div key={dim} style={{
                             padding: "10px",
                             background: `${dimConfig.color}10`,
                             borderRadius: "8px",
                             textAlign: "center",
-                        }}>
+                        }} title={rubricLabel}>
                             <div style={{ fontSize: "18px", fontWeight: 700, fontFamily: "var(--mono)", color: dimConfig.color }}>
                                 {score.toFixed(1)}
                             </div>
                             <div style={{ fontSize: "10px", color: "var(--text-tertiary)", marginTop: "2px" }}>{dimConfig.shortName}</div>
+                            {rubricLabel && (
+                                <div style={{ 
+                                    fontSize: "9px", 
+                                    color: "var(--text-tertiary)", 
+                                    marginTop: "4px",
+                                    lineHeight: 1.3,
+                                    opacity: 0.8
+                                }}>
+                                    {rubricLabel.split('(')[0].trim()}
+                                </div>
+                            )}
                         </div>
                     );
                 })}
@@ -239,6 +261,9 @@ export default function CrowdsourcePage({ theme, toggleTheme }) {
     const [generatedMechanism, setGeneratedMechanism] = useState(null);
     const [error, setError] = useState(null);
 
+    // Backend API URL
+    const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+
     const handleSubmit = async () => {
         if (!idea.trim()) return;
         
@@ -246,19 +271,49 @@ export default function CrowdsourcePage({ theme, toggleTheme }) {
         setError(null);
 
         try {
-            const response = await fetch('/api/score-mechanism', {
+            const response = await fetch(`${API_BASE_URL}/api/score-mechanism`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ idea }),
+                body: JSON.stringify({ mechanismDescription: idea }),
             });
 
             if (!response.ok) {
-                throw new Error('Failed to analyze mechanism');
+                const errorData = await response.json().catch(() => ({ error: response.statusText }));
+                throw new Error(errorData.error || 'Failed to analyze mechanism');
             }
 
-            const result = await response.json();
-            setGeneratedMechanism(result);
+            const data = await response.json();
+            
+            if (!data.success) {
+                throw new Error(data.error || 'Failed to analyze mechanism');
+            }
+
+            // Transform backend response to component format
+            // Backend returns: { success: true, scores: { mechanism_name, evidence_location, scores: {...}, rationale: {...}, ... } }
+            const scoresData = data.scores;
+            
+            // Get evidence produced, fallback to idea if not available or is "No information provided"
+            let description = scoresData.evidence_produced;
+            if (!description || description.toLowerCase().includes('no information')) {
+                description = idea;
+            }
+            
+            const mechanism = {
+                name: scoresData.mechanism_name || idea.split(' ').slice(0, 4).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+                description: description,
+                evidenceLocation: scoresData.evidence_location || "institutional",
+                scores: {
+                    hardness: scoresData.scores?.hardness || 3.0,
+                    burden: scoresData.scores?.burden || 3.0,
+                    intrusion: scoresData.scores?.intrusion || 3.0,
+                    robustness: scoresData.scores?.robustness || 3.0,
+                },
+                analysis: generateAnalysisFromScores(scoresData),
+            };
+
+            setGeneratedMechanism(mechanism);
         } catch (err) {
+            console.error("LLM scoring error:", err);
             setError(err.message);
             // Fallback: generate locally using rubric
             const localResult = generateLocalPrediction(idea);
@@ -266,6 +321,87 @@ export default function CrowdsourcePage({ theme, toggleTheme }) {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    // Generate analysis text from LLM scores with rubric fallback
+    const generateAnalysisFromScores = (scoresData) => {
+        const scores = scoresData.scores;
+        const avgScore = (scores.hardness + scores.burden + scores.intrusion + scores.robustness) / 4;
+        
+        let analysis = "";
+        
+        // Use rationale from LLM if available and meaningful
+        if (scoresData.rationale) {
+            const validRationales = Object.entries(scoresData.rationale)
+                .filter(([dim, r]) => r && r.trim() && !r.toLowerCase().includes('no information'))
+                .map(([dim, r]) => {
+                    const dimName = SCORE_DIMENSIONS[dim]?.shortName || dim;
+                    return `${dimName}: ${r}`;
+                });
+            
+            if (validRationales.length > 0) {
+                analysis = `Based on the VMFS framework analysis: ${validRationales.slice(0, 2).join('. ')}. `;
+            }
+        }
+        
+        // If no valid rationales, use rubric-based explanations
+        if (!analysis) {
+            const rubricExplanations = [];
+            
+            // Hardness rubric
+            if (scores.hardness >= 4.5) {
+                rubricExplanations.push("Hardness (5.0): Immutable/physical evidence (cryptographic, sensor, thermal) - evidence exists regardless of human intent");
+            } else if (scores.hardness >= 3.5) {
+                rubricExplanations.push("Hardness (3.0): Digital/mutable evidence (databases, unsigned logs) - could be altered if root of trust is compromised");
+            } else if (scores.hardness <= 1.5) {
+                rubricExplanations.push("Hardness (1.0): Subjective/human evidence (self-reports, testimony) - relies entirely on honesty");
+            }
+            
+            // Burden rubric
+            if (scores.burden >= 4.5) {
+                rubricExplanations.push("Burden (5.0): Policy/software only (laws, code updates) - can be implemented with a pen stroke");
+            } else if (scores.burden <= 1.5) {
+                rubricExplanations.push("Burden (1.0): New frontier hardware (TEEs, satellites, facilities) - requires manufacturing or building something new");
+            }
+            
+            // Intrusion rubric
+            if (scores.intrusion >= 4.5) {
+                rubricExplanations.push("Intrusion (5.0): Zero/external intrusion (remote, aggregate, no access) - verifier looks from outside");
+            } else if (scores.intrusion <= 1.5) {
+                rubricExplanations.push("Intrusion (1.0): Deep/internal intrusion (weights, code, training data) - verifier sees company secrets");
+            }
+            
+            // Robustness rubric
+            if (scores.robustness >= 4.5) {
+                rubricExplanations.push("Robustness (5.0): Airtight (mathematically proven, physically undeniable) - no viable evasion path");
+            } else if (scores.robustness <= 1.5) {
+                rubricExplanations.push("Robustness (1.0): Known gaps (coverage gaps, easy to bypass) - text explicitly lists evasion methods");
+            }
+            
+            if (rubricExplanations.length > 0) {
+                analysis = `VMFS Framework Assessment: ${rubricExplanations.slice(0, 2).join('. ')}. `;
+            }
+        }
+        
+        // Add overall assessment
+        if (avgScore >= 3.5) {
+            analysis += "This mechanism shows promising feasibility with good balance across dimensions. Consider how it complements existing verification tools.";
+        } else if (avgScore >= 2.5) {
+            analysis += "This mechanism has moderate feasibility with some trade-offs. ";
+            if (scores.hardness < 2.5) analysis += "Evidence hardness is low (relies on trust). ";
+            if (scores.burden < 2.5) analysis += "Infrastructure burden is high (costly to implement). ";
+            if (scores.intrusion < 2.5) analysis += "Intrusion level is high (requires deep access). ";
+            if (scores.robustness < 2.5) analysis += "Evasion robustness is low (easy to circumvent). ";
+        } else {
+            analysis += "This mechanism faces significant feasibility challenges. Consider how it could be paired with complementary mechanisms to address its weaknesses.";
+        }
+        
+        // Add biggest limitation if available and meaningful
+        if (scoresData.biggest_limitation && !scoresData.biggest_limitation.toLowerCase().includes('no information')) {
+            analysis += ` Primary limitation: ${scoresData.biggest_limitation}.`;
+        }
+        
+        return analysis.trim();
     };
 
     // Local fallback prediction using the rubric
