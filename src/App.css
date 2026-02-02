@@ -412,8 +412,9 @@ select:focus-visible {
 
 /* Enhanced glass effect for dark mode */
 :root[data-theme="dark"] .glass {
-  background: var(--bg-card);
+  background: rgba(28, 28, 32, 0.7);
   box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .container {

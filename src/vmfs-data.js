@@ -2,12 +2,134 @@
 // Based on: Verification Mechanism Feasibility Scorer (VMFS)
 // Track 4: International Verification & Coordination Infrastructure
 
+// ============================================================================
+// EVIDENCE LOCATIONS - Where the "truth" is found
+// ============================================================================
+export const EVIDENCE_LOCATIONS = {
+  DATA_CENTER: {
+    id: "data_center",
+    name: "The Data Center / Facility",
+    description: "Physical location where compute infrastructure is housed",
+  },
+  CHIP_HARDWARE: {
+    id: "chip_hardware",
+    name: "The Chip / Hardware Level",
+    description: "GPU/Accelerator level telemetry and attestation",
+  },
+  SUPPLY_CHAIN: {
+    id: "supply_chain",
+    name: "The Hardware Supply Chain",
+    description: "Manufacturing, distribution, and custody chain",
+  },
+  DEVELOPER_LAB: {
+    id: "developer_lab",
+    name: "The Developer Lab / Pipeline",
+    description: "Training processes, data filtering, internal systems",
+  },
+  INSTITUTIONAL: {
+    id: "institutional",
+    name: "The Institutional Record",
+    description: "Legal documents, contracts, declarations, whistleblower reports",
+  },
+  MODEL_REGISTRY: {
+    id: "model_registry",
+    name: "The Central Model Registry",
+    description: "Authorized model versions, weight hashes, change logs",
+  },
+  DEPLOYMENT_POINT: {
+    id: "deployment_point",
+    name: "The Model Deployment Point",
+    description: "API access, deployment servers, user access controls",
+  },
+};
+
+// ============================================================================
+// VERIFICATION GOALS - What negotiators want to verify (Intent Layer)
+// ============================================================================
+export const VERIFICATION_GOALS = [
+  {
+    id: "goal_geo_location",
+    goal: "The geographical location and jurisdictional boundaries of a compute cluster",
+    evidenceType: "GPS-stamped 'heartbeats' or multi-spectral thermal signatures",
+    evidenceLocation: "data_center",
+  },
+  {
+    id: "goal_compute_flops",
+    goal: "The total computational work (FLOPs) performed during a specific training window",
+    evidenceType: "Cryptographically signed telemetry logs from the GPU/Accelerator level",
+    evidenceLocation: "chip_hardware",
+  },
+  {
+    id: "goal_hardware_origin",
+    goal: "The legitimacy of hardware origin and its journey through the supply chain",
+    evidenceType: "Cryptographic supply-chain manifests and serial number registries",
+    evidenceLocation: "supply_chain",
+  },
+  {
+    id: "goal_data_filtering",
+    goal: "That a model's training data was filtered for hazardous or prohibited content",
+    evidenceType: "Digital audit certificates and dataset provenance hashes",
+    evidenceLocation: "developer_lab",
+  },
+  {
+    id: "goal_data_rights",
+    goal: "The legal basis and permissions for the acquisition of high-scale datasets",
+    evidenceType: "Digital contracts, licensing attestations, and usage-right metadata",
+    evidenceLocation: "institutional",
+  },
+  {
+    id: "goal_model_identity",
+    goal: "The identity and version history of a model to ensure it matches audited versions",
+    evidenceType: "A digital weight-hash tied to an authorized model registry",
+    evidenceLocation: "model_registry",
+  },
+  {
+    id: "goal_post_training",
+    goal: "Any material modifications or fine-tuning performed on a model after its initial release",
+    evidenceType: "Signed change logs and re-hashed weights in the model registry",
+    evidenceLocation: "model_registry",
+  },
+  {
+    id: "goal_access_gates",
+    goal: "The enforcement of access gates (who can use the model and from where)",
+    evidenceType: "Real-time access-control logs and verified user-identity tokens",
+    evidenceLocation: "deployment_point",
+  },
+  {
+    id: "goal_hardware_safeguards",
+    goal: "The presence of hardware-level safeguards that prevent unauthorized model use",
+    evidenceType: "Proof of TEE-based secure enclaves or physical tamper-evident seals",
+    evidenceLocation: "chip_hardware",
+  },
+  {
+    id: "goal_operational_env",
+    goal: "The operational environment to ensure the model is running on authorized servers",
+    evidenceType: "Signed server identity attestations and IP-address verification logs",
+    evidenceLocation: "deployment_point",
+  },
+];
+
+// ============================================================================
+// MECHANISMS - Updated with new 4-dimension scoring
+// ============================================================================
 export const MECHANISMS = [
   {
     id: "m1_compute_monitoring",
     mechanism: "Compute Monitoring via On-Chip Telemetry",
-    shortName: "Compute Monitoring",
+    shortName: "On-Chip Telemetry",
     definition: "Uses secure hardware features in AI chips to meter training workloads (e.g., FLOPs, run duration, chip IDs) and produce cryptographically verifiable logs.",
+    evidenceLocations: ["chip_hardware"],
+    evidenceProduced: "Signed logs of total FLOPs and runtime",
+    whatItNeeds: "Hardware support with secure telemetry and attestation, cloud/cluster integration, governance rules requiring enabled telemetry",
+    biggestLimitation: "Coverage gaps: unmonitored legacy/gray-market chips, air-gapped clusters, distributed compute below thresholds. Political acceptability for always-on telemetry.",
+    // New 4-dimension scoring
+    newScores: {
+      hardness: 4.5, // Cryptographically signed telemetry = physics-based
+      burden: 1.5,   // Requires new hardware features
+      intrusion: 2.0, // Sees compute activity (metadata level)
+      robustness: 2.5, // Coverage gaps for legacy/gray-market chips
+    },
+    // Legacy scores for backwards compatibility
     vmfsScores: {
       technicalFeasibility: 3.5,
       politicalTractability: 2.5,
@@ -17,7 +139,7 @@ export const MECHANISMS = [
       globalSouthAdoptability: 2.5,
       weightedAvg: 2.6
     },
-    evidenceProduced: [
+    evidenceProducedList: [
       "Logs of large training runs (FLOPs, chips, duration)",
       "Proof of presence and utilization of high-end chips at specific facilities",
       "Aggregated provider-level usage and capacity statistics"
@@ -45,6 +167,16 @@ export const MECHANISMS = [
     mechanism: "Chip Registry & Tracking of AI Accelerators",
     shortName: "Chip Registry",
     definition: "A system where advanced AI accelerators receive unique identifiers and all sales, transfers, and major deployments are logged in trusted databases.",
+    evidenceLocations: ["supply_chain"],
+    evidenceProduced: "Ledger of serial numbers and transfer-of-custody",
+    whatItNeeds: "Mandatory vendor participation in assigning chip IDs, operator reporting, registry operators (national/international bodies), export controls integration",
+    biggestLimitation: "Only tracks possession, not actual usage. Cannot catch clusters that never enter registry. Smuggling and falsified records possible.",
+    newScores: {
+      hardness: 3.0, // Database/logs - mutable digital
+      burden: 3.5,   // Registry/database infrastructure
+      intrusion: 4.5, // External tracking, no IP exposure
+      robustness: 2.0, // Smuggling, shadow inventory evasion
+    },
     vmfsScores: {
       technicalFeasibility: 3.0,
       politicalTractability: 3.0,
@@ -54,7 +186,7 @@ export const MECHANISMS = [
       globalSouthAdoptability: 3.0,
       weightedAvg: 3.0
     },
-    evidenceProduced: [
+    evidenceProducedList: [
       "Ownership and transfer history for each registered high-end AI chip",
       "Installation location of registered chips",
       "Aggregate national and sectoral inventories of frontier-class compute capacity"
@@ -82,6 +214,16 @@ export const MECHANISMS = [
     mechanism: "Hardware Attestation via Trusted Execution Environments (TEEs)",
     shortName: "TEE Attestation",
     definition: "Enables AI chips/servers to cryptographically prove specific properties of a training/inference run without revealing sensitive model weights, using tamper-resistant hardware enclaves.",
+    evidenceLocations: ["chip_hardware", "deployment_point"],
+    evidenceProduced: "Cryptographic proof of workload properties (compute, code, duration) and TEE integrity attestations",
+    whatItNeeds: "TEE-enabled hardware (Intel TDX, AMD SEV-SNP, ARM CCA), trusted hardware vendors, cloud/on-prem integration, accredited verifiers with PKI infrastructure",
+    biggestLimitation: "Reliance on hardware vendors - TEE security rests on a few companies; backdoor or vulnerability could undermine all attestations. Performance overhead.",
+    newScores: {
+      hardness: 5.0, // Cryptographic proof, tamper-resistant
+      burden: 1.0,   // Requires specialized hardware/secure enclaves
+      intrusion: 4.0, // Proves without revealing weights
+      robustness: 3.5, // Side-channel attacks possible but costly
+    },
     vmfsScores: {
       technicalFeasibility: 4.2,
       politicalTractability: 2.8,
@@ -91,7 +233,7 @@ export const MECHANISMS = [
       globalSouthAdoptability: 2.0,
       weightedAvg: 3.1
     },
-    evidenceProduced: [
+    evidenceProducedList: [
       "Cryptographic proof of workload properties (compute, code, duration)",
       "Attestations of TEE integrity and location/configuration",
       "Verifiable audit/eval results bound to model/dataset"
@@ -119,6 +261,16 @@ export const MECHANISMS = [
     mechanism: "Third-Party Model Audits",
     shortName: "Third-Party Audits",
     definition: "Independent external experts gain structured access to frontier AI models, weights, training data, and internal processes to evaluate safety claims and governance.",
+    evidenceLocations: ["developer_lab"],
+    evidenceProduced: "Capability risk reports and safety-compliance certs",
+    whatItNeeds: "Developer cooperation granting secure, time-bounded access, accredited auditors (e.g., METR, AISI, BSI), legal agreements/regulations, secure infrastructure",
+    biggestLimitation: "Access depth and developer cooperation - labs may limit scope or redact info. Audits are periodic snapshots, miss ongoing risks or post-audit changes.",
+    newScores: {
+      hardness: 1.5, // Audit reports - human judgment/testimony
+      burden: 5.0,   // Just regulations and agreements
+      intrusion: 1.0, // Deep access to weights, code, training data
+      robustness: 2.0, // Selective disclosure, staging environments
+    },
     vmfsScores: {
       technicalFeasibility: 4.5,
       politicalTractability: 4.0,
@@ -128,7 +280,7 @@ export const MECHANISMS = [
       globalSouthAdoptability: 3.5,
       weightedAvg: 3.8
     },
-    evidenceProduced: [
+    evidenceProducedList: [
       "Independent assessment reports on model capabilities (cyber/bio/chem risks)",
       "Verification of internal safety/security practices",
       "Compliance confirmation against standards",
@@ -158,6 +310,16 @@ export const MECHANISMS = [
     mechanism: "Model Watermarking",
     shortName: "Model Watermarking",
     definition: "Embeds imperceptible, statistically detectable signals into AI model outputs during generation, allowing downstream detectors to trace content back to specific models.",
+    evidenceLocations: ["deployment_point"],
+    evidenceProduced: "Detectable signals in output to prove model origin",
+    whatItNeeds: "Model developers embedding watermarks during training/inference, detector operators running detectors, standards for watermark strength, regulators mandating watermarking",
+    biggestLimitation: "Robustness to removal attacks - simple edits (paraphrase, crop) often break watermarks. Hard to remove but not impossible.",
+    newScores: {
+      hardness: 3.5, // Statistical signals - digital/mutable but robust
+      burden: 5.0,   // Software/code update only
+      intrusion: 5.0, // External, only looks at outputs
+      robustness: 3.0, // Hard to remove but paraphrasing attacks exist
+    },
     vmfsScores: {
       technicalFeasibility: 2.5,
       politicalTractability: 3.5,
@@ -167,7 +329,7 @@ export const MECHANISMS = [
       globalSouthAdoptability: 4.0,
       weightedAvg: 3.6
     },
-    evidenceProduced: [
+    evidenceProducedList: [
       "Detection of AI-generated content with confidence scores",
       "Attribution to specific model/provider",
       "Proof of provenance chain for derivative content",
@@ -197,6 +359,16 @@ export const MECHANISMS = [
     mechanism: "Whistleblower Programs",
     shortName: "Whistleblower Programs",
     definition: "Incentivize and protect AI lab employees/contractors to confidentially report undisclosed frontier AI development, safety failures, or agreement violations.",
+    evidenceLocations: ["institutional"],
+    evidenceProduced: "Insider testimony and internal documents",
+    whatItNeeds: "Whistleblower protection laws, secure anonymous hotlines, financial rewards, international coordination, auditors to vet tips",
+    biggestLimitation: "Insider willingness - fear of retaliation, loyalty, or suppression may yield few reports. Dependence on reporting.",
+    newScores: {
+      hardness: 1.0, // Human testimony, self-report
+      burden: 5.0,   // Law/regulation only
+      intrusion: 2.5, // Requires insider access but voluntary
+      robustness: 1.5, // Suppression, retaliation deterrence
+    },
     vmfsScores: {
       technicalFeasibility: 4.0,
       politicalTractability: 3.0,
@@ -206,7 +378,7 @@ export const MECHANISMS = [
       globalSouthAdoptability: 4.5,
       weightedAvg: 3.9
     },
-    evidenceProduced: [
+    evidenceProducedList: [
       "Insider accounts of undeclared training runs or safety incidents",
       "Specific leads for inspections (e.g., hidden cluster locations)",
       "Documents/emails proving violations",
@@ -236,6 +408,16 @@ export const MECHANISMS = [
     mechanism: "Remote Sensing (Thermal/Satellite Monitoring)",
     shortName: "Remote Sensing",
     definition: "Uses commercial/government satellites with thermal infrared cameras to detect heat signatures from large AI data centers without on-site access.",
+    evidenceLocations: ["data_center"],
+    evidenceProduced: "Thermal anomalies indicating high-power compute clusters",
+    whatItNeeds: "Satellite operators (commercial providers like Satellite Vu, Planet, Maxar), AI analysts, government/regulator agreements, no on-ground cooperation needed",
+    biggestLimitation: "Discriminating AI compute from other data centers - generic hyperscalers mask signatures. Coarse proxies (heat/power) cannot measure FLOPs precisely.",
+    newScores: {
+      hardness: 4.0, // Thermal/physics-based measurements
+      burden: 3.0,   // Uses commercial satellites, some integration
+      intrusion: 5.0, // Zero intrusion - external observation
+      robustness: 2.5, // Distributed compute, thermal masking evasion
+    },
     vmfsScores: {
       technicalFeasibility: 3.5,
       politicalTractability: 4.5,
@@ -245,7 +427,7 @@ export const MECHANISMS = [
       globalSouthAdoptability: 3.5,
       weightedAvg: 4.1
     },
-    evidenceProduced: [
+    evidenceProducedList: [
       "Thermal anomalies indicating high-power compute clusters",
       "Visual signatures of data centers via optical satellites",
       "Change detection (new builds, capacity ramps) over time",
@@ -275,6 +457,16 @@ export const MECHANISMS = [
     mechanism: "Declaration Regimes",
     shortName: "Declaration Regimes",
     definition: "Require AI developers/operators to periodically self-report key details (training runs, model releases, facilities) into public/semi-public registries with audits to verify claims.",
+    evidenceLocations: ["institutional", "model_registry"],
+    evidenceProduced: "Formal self-reports on infrastructure and safety tests",
+    whatItNeeds: "Developers mandated to self-report via standardized forms, registry operator, regulators with verification powers, auditors for random checks",
+    biggestLimitation: "Self-reporting honesty - actors may omit/understate to evade scrutiny. Dependence on reporting.",
+    newScores: {
+      hardness: 1.0, // Self-report, declaration, human honesty
+      burden: 5.0,   // Regulation/registry only
+      intrusion: 4.0, // Metadata, no deep access
+      robustness: 1.5, // Strategic non-disclosure, falsification
+    },
     vmfsScores: {
       technicalFeasibility: 4.0,
       politicalTractability: 4.0,
@@ -284,7 +476,7 @@ export const MECHANISMS = [
       globalSouthAdoptability: 2.5,
       weightedAvg: 3.4
     },
-    evidenceProduced: [
+    evidenceProducedList: [
       "Self-reported inventories of frontier models, training compute, facilities",
       "Registry of high-risk systems with compliance attestations",
       "Audit results confirming or flagging discrepancies"
@@ -309,44 +501,52 @@ export const MECHANISMS = [
     citations: ["Toward a Global Regime for Compute Governance 2025", "Wasil et al. 2024", "EU AI Act"]
   },
   {
-    id: "m9_blockchain_registry",
-    mechanism: "Blockchain-Based Model Registry",
-    shortName: "Blockchain Registry",
-    definition: "Distributed ledger recording immutable metadata for all frontier models: training timestamps, compute used, ownership chain, and evaluation results.",
+    id: "m9_data_filtering",
+    mechanism: "Data Filtering Verification",
+    shortName: "Data Filtering",
+    definition: "Verifies that training datasets have been filtered to remove prohibited or hazardous content through audit logs, hash comparisons, and provenance tracking.",
+    evidenceLocations: ["developer_lab"],
+    evidenceProduced: "Logs showing removal of prohibited content hashes",
+    whatItNeeds: "Standardized filtering protocols, hash databases of prohibited content, audit infrastructure, developer compliance",
+    biggestLimitation: "Cannot verify what was never logged. Filters can be bypassed or training resumed with unfiltered data post-audit.",
+    newScores: {
+      hardness: 3.0, // Digital audit logs, hash comparisons
+      burden: 4.0,   // Software/process integration
+      intrusion: 2.0, // Requires access to training pipeline
+      robustness: 2.0, // Post-audit modification, unlogged data
+    },
     vmfsScores: {
       technicalFeasibility: 3.8,
-      politicalTractability: 2.0,
+      politicalTractability: 3.5,
       institutionalReq: "medium",
       institutionalReqNumeric: 2,
       sovereigntyImpact: 3.5,
-      globalSouthAdoptability: 2.8,
-      weightedAvg: 3.0
+      globalSouthAdoptability: 3.0,
+      weightedAvg: 3.4
     },
-    evidenceProduced: [
-      "Immutable timestamp of model creation",
-      "Chain of custody for model transfers",
-      "Cryptographic proof of evaluation completion",
-      "Verifiable ownership history and lineage records"
+    evidenceProducedList: [
+      "Hash-based proof of content removal",
+      "Audit trails of filtering process",
+      "Dataset provenance certificates",
+      "Compliance reports for content standards"
     ],
     whatItVerifies: [
-      "Model provenance and lineage without central authority",
-      "Ownership transfers to prevent illicit trade",
-      "Evaluation compliance before deployment authorization",
-      "Tamper-proof audit trail of model modifications"
+      "That prohibited content classes were filtered from training data",
+      "Consistency between claimed and actual filtering processes",
+      "Compliance with content standards before model training"
     ],
     dependencies: [
-      "Consensus protocol (Proof-of-Authority for speed and governance)",
-      "Developer participation in registry submission",
-      "Oracle network for off-chain data verification",
-      "Smart contracts for automated compliance checks",
-      "International standards for metadata schemas"
+      "Standardized prohibited content hash databases",
+      "Developer implementation of filtering pipelines",
+      "Audit access to training infrastructure",
+      "International standards for content filtering"
     ],
     limitations: {
-      primary: "Political resistance due to crypto associations and perceived lack of governance control over decentralized systems",
-      technical: "Cannot verify accuracy of submitted metadata; only records what's claimed (garbage-in-garbage-out risk)"
+      primary: "Cannot verify negative - only proves what was logged as filtered",
+      technical: "Filters can be circumvented or disabled after audit verification"
     },
-    evasionModes: ["False metadata submission", "Shadow models trained off-ledger", "Ownership obfuscation through shell entities", "Sybil attacks on consensus"],
-    citations: ["Blockchain for AI Governance 2025", "Distributed Ledger Verification Systems 2024", "Decentralized Model Registries 2025"]
+    evasionModes: ["Training on unlogged data", "Post-audit filter bypass", "Selective logging"],
+    citations: ["Data Governance Framework 2025", "Content Filtering Standards 2024"]
   }
 ];
 
@@ -426,30 +626,30 @@ export const OOVS = [
   }
 ];
 
-// Coverage Matrix: Mechanism × OoV pairs
+// Coverage Matrix: Mechanism x OoV pairs
 export const COVERAGE_MATRIX = [
   // M1: Compute Monitoring
   {
     mechanismId: "m1_compute_monitoring",
     oov1_compute: {
       coverage: "primary",
-      symbol: "✔",
+      symbol: "Y",
       justification: "Direct measurement of compute via on-chip telemetry produces checkable evidence against declared thresholds.",
       evidenceArtifact: "Run-level evidence dashboard showing above-threshold events"
     },
     oov2_lineage: {
       coverage: "partial",
-      symbol: "◐",
+      symbol: "-",
       justification: "Telemetry reveals computational activity but cannot independently prove which model was trained without integration with signed workload identifiers."
     },
     oov3_deployment: {
       coverage: "none",
-      symbol: "✖",
+      symbol: "X",
       justification: "Does not observe deployment configurations or access controls."
     },
     oov4_post_training: {
       coverage: "partial",
-      symbol: "◐",
+      symbol: "-",
       justification: "Shows compute activity but not what changed in the model or system architecture."
     }
   },
@@ -458,22 +658,22 @@ export const COVERAGE_MATRIX = [
     mechanismId: "m2_chip_registry",
     oov1_compute: {
       coverage: "partial",
-      symbol: "◐",
+      symbol: "-",
       justification: "Registry confirms possession not use; actors may possess but not utilize capacity."
     },
     oov2_lineage: {
       coverage: "none",
-      symbol: "✖",
+      symbol: "X",
       justification: "Does not track model provenance or transformations."
     },
     oov3_deployment: {
       coverage: "none",
-      symbol: "✖",
+      symbol: "X",
       justification: "Tracks hardware location but not deployment configurations or access."
     },
     oov4_post_training: {
       coverage: "partial",
-      symbol: "◐",
+      symbol: "-",
       justification: "Tracks infrastructure changes that enable modification but not the modifications themselves."
     }
   },
@@ -482,24 +682,24 @@ export const COVERAGE_MATRIX = [
     mechanismId: "m3_tee_attestation",
     oov1_compute: {
       coverage: "primary",
-      symbol: "✔",
+      symbol: "Y",
       justification: "Generates cryptographically signed evidence that specific code ran with defined compute bounds.",
       evidenceArtifact: "Attestation result dashboard showing pass/fail status and bound claims"
     },
     oov2_lineage: {
       coverage: "partial",
-      symbol: "◐",
+      symbol: "-",
       justification: "Attestation proves what was measured in the enclave but requires integration with model registries to definitively link to specific model versions."
     },
     oov3_deployment: {
       coverage: "primary",
-      symbol: "✔",
+      symbol: "Y",
       justification: "Can attest to environment verification - proving workloads ran in authorized locations/configurations.",
       evidenceArtifact: "Attestations of TEE integrity and location/configuration"
     },
     oov4_post_training: {
       coverage: "partial",
-      symbol: "◐",
+      symbol: "-",
       justification: "Can attest to modification events if modifications occur within TEE, but cannot capture modifications in non-attested environments."
     }
   },
@@ -508,23 +708,23 @@ export const COVERAGE_MATRIX = [
     mechanismId: "m4_third_party_audits",
     oov1_compute: {
       coverage: "partial",
-      symbol: "◐",
+      symbol: "-",
       justification: "Audits can review compute logs if provided but depend on auditee cooperation and log integrity."
     },
     oov2_lineage: {
       coverage: "primary",
-      symbol: "✔",
+      symbol: "Y",
       justification: "Structured access to models enables direct verification of model identity and lineage documentation.",
       evidenceArtifact: "Audit report with version identity reproduction and lineage review"
     },
     oov3_deployment: {
       coverage: "partial",
-      symbol: "◐",
+      symbol: "-",
       justification: "Can assess deployment controls at time of audit but not continuous monitoring."
     },
     oov4_post_training: {
       coverage: "primary",
-      symbol: "✔",
+      symbol: "Y",
       justification: "Direct access enables verification of post-training changes through documentation review and targeted reevaluation.",
       evidenceArtifact: "Post-training change assessment in audit report"
     }
@@ -534,22 +734,22 @@ export const COVERAGE_MATRIX = [
     mechanismId: "m5_watermarking",
     oov1_compute: {
       coverage: "none",
-      symbol: "✖",
+      symbol: "X",
       justification: "Does not address compute use at all."
     },
     oov2_lineage: {
       coverage: "partial",
-      symbol: "◐",
+      symbol: "-",
       justification: "Can suggest model family but not definitive version or lineage."
     },
     oov3_deployment: {
       coverage: "partial",
-      symbol: "◐",
+      symbol: "-",
       justification: "Indicates deployment occurred but not deployment conditions or access controls."
     },
     oov4_post_training: {
       coverage: "partial",
-      symbol: "◐",
+      symbol: "-",
       justification: "Changes in watermark patterns could indicate modifications, but not reliably."
     }
   },
@@ -558,22 +758,22 @@ export const COVERAGE_MATRIX = [
     mechanismId: "m6_whistleblowers",
     oov1_compute: {
       coverage: "partial",
-      symbol: "◐",
+      symbol: "-",
       justification: "Provides leads and triggers for deeper investigation rather than direct verification evidence."
     },
     oov2_lineage: {
       coverage: "partial",
-      symbol: "◐",
+      symbol: "-",
       justification: "Insider reports can flag lineage issues but depend on reporter access and credibility."
     },
     oov3_deployment: {
       coverage: "partial",
-      symbol: "◐",
+      symbol: "-",
       justification: "Can reveal unauthorized deployments but coverage is probabilistic and non-systematic."
     },
     oov4_post_training: {
       coverage: "partial",
-      symbol: "◐",
+      symbol: "-",
       justification: "Insiders may report undisclosed modifications, but depends on individual decisions to report."
     }
   },
@@ -582,22 +782,22 @@ export const COVERAGE_MATRIX = [
     mechanismId: "m7_remote_sensing",
     oov1_compute: {
       coverage: "partial",
-      symbol: "◐",
+      symbol: "-",
       justification: "Heat and power are indirect proxies; cannot precisely measure FLOPs or distinguish AI compute from other workloads."
     },
     oov2_lineage: {
       coverage: "none",
-      symbol: "✖",
+      symbol: "X",
       justification: "Cannot observe model provenance or transformations from external imagery."
     },
     oov3_deployment: {
       coverage: "partial",
-      symbol: "◐",
+      symbol: "-",
       justification: "Can identify facilities but not access controls or deployment configurations."
     },
     oov4_post_training: {
       coverage: "none",
-      symbol: "✖",
+      symbol: "X",
       justification: "Cannot detect model modifications from external monitoring."
     }
   },
@@ -606,49 +806,47 @@ export const COVERAGE_MATRIX = [
     mechanismId: "m8_declarations",
     oov1_compute: {
       coverage: "partial",
-      symbol: "◐",
+      symbol: "-",
       justification: "Provides claimed state for comparison against independent verification methods; vulnerable to omission without audits."
     },
     oov2_lineage: {
       coverage: "partial",
-      symbol: "◐",
+      symbol: "-",
       justification: "Creates paper trail but requires cross-referencing with other mechanisms for validation."
     },
     oov3_deployment: {
       coverage: "partial",
-      symbol: "◐",
+      symbol: "-",
       justification: "Establishes baseline transparency but limited standalone verification power."
     },
     oov4_post_training: {
       coverage: "partial",
-      symbol: "◐",
+      symbol: "-",
       justification: "Enables detection of discrepancies when cross-referenced with audits or monitoring."
     }
   },
-  // M9: Blockchain Registry (NEW!)
+  // M9: Data Filtering
   {
-    mechanismId: "m9_blockchain_registry",
+    mechanismId: "m9_data_filtering",
     oov1_compute: {
-      coverage: "partial",
-      symbol: "◐",
-      justification: "Records compute metadata submitted to ledger but doesn't directly measure or verify actual FLOP counts."
+      coverage: "none",
+      symbol: "X",
+      justification: "Does not address compute use directly."
     },
     oov2_lineage: {
-      coverage: "primary",
-      symbol: "✔",
-      justification: "Immutable ledger is ideal for tracking model genealogy and ownership chain; cryptographic hashes prove modification history.",
-      evidenceArtifact: "Blockchain explorer showing complete model lineage with cryptographic proofs"
+      coverage: "partial",
+      symbol: "-",
+      justification: "Data provenance tracking provides partial lineage information for training data origins."
     },
     oov3_deployment: {
-      coverage: "partial",
-      symbol: "◐",
-      justification: "Can record deployment events and authorized locations but cannot monitor ongoing access or enforcement."
+      coverage: "none",
+      symbol: "X",
+      justification: "Does not monitor deployment conditions."
     },
     oov4_post_training: {
-      coverage: "primary",
-      symbol: "✔",
-      justification: "Each modification creates new ledger entry with timestamp and parameter diff hash, providing tamper-proof audit trail.",
-      evidenceArtifact: "Timestamped modification records with cryptographic links to previous versions"
+      coverage: "partial",
+      symbol: "-",
+      justification: "Can verify pre-training filtering but not post-training data additions."
     }
   }
 ];
@@ -658,26 +856,32 @@ export const KEY_FINDINGS = [
   {
     id: "finding_1",
     title: "No Silver Bullet",
-    description: "No mechanism achieves scores above 4.0 across all dimensions. The highest weighted average is Remote Sensing (4.1), which benefits from being non-intrusive but has limited ability to verify training run properties.",
+    description: "No mechanism achieves high scores across all four dimensions. Hard evidence (physics-based) mechanisms tend to have high infrastructure burden, while low-burden mechanisms rely on softer evidence like self-reports.",
     icon: "target"
   },
   {
     id: "finding_2",
-    title: "Technical-Political Trade-off",
-    description: "The most technically sophisticated mechanisms (compute monitoring, hardware attestation) face the steepest political barriers. This suggests a sequencing challenge: building technical capacity before political consensus exists may strand investments.",
+    title: "Trust vs Cost Trade-off",
+    description: "The most trustworthy mechanisms (TEE Attestation, On-Chip Telemetry) require new hardware infrastructure, while the cheapest mechanisms (Declarations, Whistleblowers) depend on human honesty.",
     icon: "scale"
   },
   {
     id: "finding_3",
-    title: "Global South Adoption Gap",
-    description: "Five of nine mechanisms score below 3.5 on Global South Adoptability. Hardware-dependent mechanisms (compute monitoring, TEEs) score lowest (2.0-2.5), while personnel-based mechanisms (whistleblowers) score highest (4.5).",
-    icon: "globe"
+    title: "Intrusion vs Robustness",
+    description: "External monitoring (Remote Sensing, Watermarking) has low intrusion but provides coarse evidence. Deep verification (Third-Party Audits) provides rich evidence but requires sensitive access.",
+    icon: "shield"
   },
   {
     id: "finding_4",
-    title: "Layered Approaches Required",
-    description: "The pattern of complementary strengths and weaknesses suggests robust verification will require multiple mechanisms. For example: Remote sensing (high political tractability) + hardware attestation (high technical precision).",
+    title: "Layered Defense Required",
+    description: "Robust verification requires combining mechanisms from different Evidence Locations. A portfolio covering Chip Level + Institutional + Deployment creates redundant verification paths.",
     icon: "layers"
+  },
+  {
+    id: "finding_5",
+    title: "Chip-Level Blind Spot Critical",
+    description: "Portfolios without chip-level verification cannot verify digital compute activity. Bad actors could use legal hardware for illegal training runs if only external monitoring is deployed.",
+    icon: "alert"
   }
 ];
 
@@ -732,10 +936,10 @@ export const GLOBAL_SOUTH_BARRIERS = [
     adaptationNeeded: "De minimis thresholds for small developers"
   },
   {
-    mechanismId: "m9_blockchain_registry",
-    primaryBarrier: "Requires node infrastructure and blockchain literacy",
-    historicalPrecedent: "Digital identity systems in developing nations",
-    adaptationNeeded: "Subsidized node hosting, capacity building programs"
+    mechanismId: "m9_data_filtering",
+    primaryBarrier: "Hash databases may not cover local content concerns",
+    historicalPrecedent: "Content moderation regional differences",
+    adaptationNeeded: "Regional content standard customization"
   }
 ];
 
@@ -840,6 +1044,118 @@ export const SUBVERSION_VECTORS = [
     applicableMechanisms: ["m1_compute_monitoring", "m8_declarations"]
   }
 ];
+
+// Score dimension definitions for display
+export const SCORE_DIMENSIONS = {
+  hardness: {
+    name: "Evidence Hardness",
+    shortName: "Hardness",
+    question: "Is the evidence based on math/physics (Hard) or human trust (Soft)?",
+    description: "The Trust Score - measures whether evidence exists regardless of human intent",
+    color: "#0a84ff",
+    labels: {
+      5: "Immutable/Physical (cryptographic, sensor, thermal)",
+      3: "Digital/Mutable (databases, unsigned logs)",
+      1: "Subjective/Human (self-reports, testimony)"
+    }
+  },
+  burden: {
+    name: "Infrastructure Burden",
+    shortName: "Burden",
+    question: "Does it require building new hardware (High Burden) or just passing laws (Low Burden)?",
+    description: "The Cost Score - what new physical reality must be built",
+    color: "#32d74b",
+    labels: {
+      5: "Policy/Software Only (laws, code updates)",
+      3: "Commercial/Cloud (vendor cooperation, APIs)",
+      1: "New Frontier Hardware (TEEs, satellites, facilities)"
+    }
+  },
+  intrusion: {
+    name: "Intrusion Level",
+    shortName: "Intrusion",
+    question: "How much secret data (IP, Weights) is exposed?",
+    description: "The Friction Score - measures privacy and IP exposure risk",
+    color: "#ff9f0a",
+    labels: {
+      5: "Zero/External (remote, aggregate, no access)",
+      3: "Metadata/API (traffic analysis, headers)",
+      1: "Deep/Internal (weights, code, training data)"
+    }
+  },
+  robustness: {
+    name: "Evasion Robustness",
+    shortName: "Robustness",
+    question: "How easy is it to spoof or hide from this mechanism?",
+    description: "The Cheating Score - measures vulnerability to evasion",
+    color: "#bf5af2",
+    labels: {
+      5: "Airtight (mathematically proven, physically undeniable)",
+      3: "Costly Evasion (possible but requires effort)",
+      1: "Known Gaps (coverage gaps, easy to bypass)"
+    }
+  }
+};
+
+// Helper function to get mechanism by evidence location
+export function getMechanismsByLocation(locationId) {
+  return MECHANISMS.filter(m => m.evidenceLocations.includes(locationId));
+}
+
+// Helper function to get goals by evidence location
+export function getGoalsByLocation(locationId) {
+  return VERIFICATION_GOALS.filter(g => g.evidenceLocation === locationId);
+}
+
+// Helper to calculate portfolio scores
+export function calculatePortfolioScores(mechanisms) {
+  if (!mechanisms || mechanisms.length === 0) return null;
+  
+  const dimensions = ['hardness', 'burden', 'intrusion', 'robustness'];
+  const avgScores = {};
+  
+  dimensions.forEach(dim => {
+    const sum = mechanisms.reduce((acc, m) => acc + (m.newScores?.[dim] || 3), 0);
+    avgScores[dim] = sum / mechanisms.length;
+  });
+  
+  avgScores.overall = Object.values(avgScores).reduce((a, b) => a + b, 0) / 4;
+  
+  return avgScores;
+}
+
+// Helper to detect portfolio blind spots
+export function detectBlindSpots(mechanisms) {
+  const coveredLocations = new Set();
+  mechanisms.forEach(m => {
+    m.evidenceLocations.forEach(loc => coveredLocations.add(loc));
+  });
+  
+  const warnings = [];
+  
+  if (!coveredLocations.has('chip_hardware')) {
+    warnings.push({
+      type: 'critical',
+      message: "Your portfolio cannot verify digital activity (FLOPs). A bad actor could use legal hardware for illegal training. Consider adding On-Chip Telemetry or TEE Attestation."
+    });
+  }
+  
+  if (!coveredLocations.has('institutional') && !coveredLocations.has('developer_lab')) {
+    warnings.push({
+      type: 'warning',
+      message: "No mechanism covers institutional records or developer processes. Consider adding Third-Party Audits or Declaration Regimes for compliance verification."
+    });
+  }
+  
+  if (!coveredLocations.has('deployment_point')) {
+    warnings.push({
+      type: 'info',
+      message: "No mechanism monitors model deployment. Consider adding Watermarking or TEE Attestation to verify deployment compliance."
+    });
+  }
+  
+  return warnings;
+}
 
 if (typeof window !== 'undefined') {
     window.COVERAGE_MATRIX = COVERAGE_MATRIX;

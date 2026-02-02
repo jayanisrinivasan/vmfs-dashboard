@@ -9,8 +9,11 @@ AI Safety Verification Mechanisms Framework Dashboard
 Create a `.env` file in the root directory:
 
 ```
-VITE_GOOGLE_AI_API_KEY=your_google_ai_api_key_here
+GROQ_AI_API_KEY=your_groq_api_key_here
+VITE_GROQ_AI_API_KEY=your_groq_api_key_here
 ```
+
+**Note**: You need both `GROQ_AI_API_KEY` (for the backend server) and `VITE_GROQ_AI_API_KEY` (for the frontend).
 
 ### For Vercel Deployment
 
@@ -20,17 +23,19 @@ VITE_GOOGLE_AI_API_KEY=your_google_ai_api_key_here
 2. Select your project
 3. Go to **Settings** → **Environment Variables**
 4. Add a new variable:
-   - **Name**: `VITE_GOOGLE_AI_API_KEY`
-   - **Value**: Your Google AI API key
+   - **Name**: `VITE_GROQ_AI_API_KEY`
+   - **Value**: Your Groq API key
    - **Environment**: Select all (Production, Preview, Development)
 5. Click **Save**
 6. **Redeploy** your application (go to Deployments → click the three dots on the latest deployment → Redeploy)
 
-### Getting a Google AI API Key
+### Getting a Groq API Key
 
-1. Go to https://aistudio.google.com/app/apikey
-2. Create a new API key
-3. Copy the key and add it to your environment variables
+1. Go to https://console.groq.com/
+2. Sign up or log in
+3. Navigate to API Keys section
+4. Create a new API key
+5. Copy the key and add it to your environment variables
 
 ## Development
 

@@ -4,9 +4,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import HomePage from "./pages/Home";
 import DashboardPage from "./pages/Dashboard";
 import FrameworkPage from "./pages/Framework";
-import MechanismsPage from "./pages/Mechanisms";
 import PortfolioPage from "./pages/Portfolio";
 import TreatyAdvisorPage from "./pages/TreatyAdvisor";
+import CrowdsourcePage from "./pages/Crowdsource";
 import "./App.css";
 
 export default function App() {
@@ -33,9 +33,9 @@ export default function App() {
         <Route path="/" element={<HomePage theme={theme} toggleTheme={toggleTheme} />} />
         <Route path="/dashboard" element={<DashboardPage theme={theme} toggleTheme={toggleTheme} />} />
         <Route path="/framework" element={<FrameworkPage theme={theme} toggleTheme={toggleTheme} />} />
-        <Route path="/mechanisms" element={<MechanismsPage theme={theme} toggleTheme={toggleTheme} />} />
         <Route path="/portfolio" element={<PortfolioPage theme={theme} toggleTheme={toggleTheme} />} />
         <Route path="/treaty-advisor" element={<TreatyAdvisorPage theme={theme} toggleTheme={toggleTheme} />} />
+        <Route path="/crowdsource" element={<CrowdsourcePage theme={theme} toggleTheme={toggleTheme} />} />
       </Routes>
     </BrowserRouter>
   );

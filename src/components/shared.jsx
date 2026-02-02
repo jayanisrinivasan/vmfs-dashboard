@@ -10,11 +10,11 @@ export function Navbar({ theme, toggleTheme }) {
 
     const links = [
         { to: "/", label: "Home" },
-        { to: "/dashboard", label: "Dashboard" },
-        { to: "/portfolio", label: "Portfolio" },
+        { to: "/dashboard", label: "Choose Your Goal" },
+        { to: "/portfolio", label: "Compare Mechanisms" },
         { to: "/treaty-advisor", label: "Treaty Advisor" },
         { to: "/framework", label: "Framework" },
-        { to: "/mechanisms", label: "Mechanisms" },
+        { to: "/crowdsource", label: "Submit" },
     ];
 
     return (
